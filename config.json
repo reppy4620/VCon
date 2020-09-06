@@ -1,0 +1,29 @@
+{
+  "seed": 42,
+  "batch_size": 512,
+  "num_epochs": 100,
+  "lr": 1e-3,
+  "speaker_dim": 256,
+  "mel_size": 80,
+  "encoder": {
+    "n_layers": 3,
+    "channel": 256,
+    "speaker_emb_dim": 256,
+    "emb_dim": 64
+  },
+  "vq": {
+    "dim": 64,
+    "n_embed": 128,
+    "decay": 0.99,
+    "eps": 1e-5
+  },
+  "decoder": {
+    "n_layers": 3,
+    "channel": 256,
+    "speaker_emb_dim": 256,
+    "emb_dim": 64
+  },
+  "postnet": {
+    "dim": 256
+  }
+}
