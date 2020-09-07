@@ -11,5 +11,5 @@ def collate_fn(batch, padding=False):
     else:
         # drop
         min_length = min(map(lambda x: x.size(-1), mel))
-        mel = torch.stack(tuple(map(lambda x: x[:, :, :min_length], mel)))
+        mel = torch.stack(tuple(map(lambda x: x[:, :min_length], mel)))
     return wav, mel

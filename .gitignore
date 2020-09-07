@@ -136,7 +136,7 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
-# Cython debug symbols
+# Cython debug_notebook symbols
 cython_debug/
 
 ### JupyterNotebooks template
@@ -155,3 +155,4 @@ ipython_config.py
 
 .idea
 ./notebooks/.ipynb_checkpoints
+debug_notebook

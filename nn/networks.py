@@ -190,7 +190,7 @@ class VectorQuantizer(nn.Module):
             embed_normalized = self.embed_avg / cluster_size.unsqueeze(0)
             self.embed.data.copy_(embed_normalized)
 
-        diff = (quantize.detach() - input).pow(2).mean()
+        diff = (quantize.detach() - input).pow(2).sum()
         quantize = input + (quantize - input).detach()
 
         return quantize, diff, embed_ind

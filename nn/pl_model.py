@@ -9,11 +9,12 @@ from optim import RAdam
 
 class VCModule(pl.LightningModule):
 
-    def __init__(self, hparams):
+    def __init__(self, params):
         super().__init__()
-        self.hparams = hparams
 
-        self.model = VCModel(hparams)
+        self.params = params
+
+        self.model = VCModel(params)
 
         self.spec_augmenter = SpecAugmentation(
             time_drop_width=32,
@@ -44,11 +45,11 @@ class VCModule(pl.LightningModule):
         return {'val_loss': loss, 'val_l_recon': l_recon, 'val_vq_loss': vq_loss}
 
     def validation_epoch_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs])
-        avg_l_recon = torch.stack([x['val_l_recon'] for x in outputs])
-        avg_vq_loss = torch.stack([x['val_vq_loss'] for x in outputs])
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).sum()
+        avg_l_recon = torch.stack([x['val_l_recon'] for x in outputs]).sum()
+        avg_vq_loss = torch.stack([x['val_vq_loss'] for x in outputs]).sum()
         log = {'avg_loss': avg_loss, 'avg_l_recon': avg_l_recon, 'avg_vq_loss': avg_vq_loss}
         return {'val_loss': avg_loss, 'log': log}
 
     def configure_optimizers(self):
-        return RAdam(self.model.parameters(), self.hparams.optimizer.lr)
+        return RAdam(self.model.parameters(), self.params.optimizer.lr)

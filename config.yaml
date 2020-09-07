@@ -1,9 +1,10 @@
 # experiment params
 seed: 42
-batch_size: 256
+batch_size: 512
 n_epochs: 100
 
 data_dir: D:/dataset/vctk/processed
+model_dir: D:/models/vcon
 train_ratio: 0.9
 
 # resemblyzer.VoiceEncoder encodes wav to 256-dim vector
@@ -24,7 +25,7 @@ encoder:
   n_conv: 3
   channel: 256
 
-# EMA in vq params
+# EMA params in vq
 ema:
   decay: 0.99
   eps: 0.00005

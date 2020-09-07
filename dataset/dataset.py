@@ -9,5 +9,5 @@ class VCDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        wav, _, mel = self.data[idx]
+        wav, mel = self.data[idx]
         return wav, mel

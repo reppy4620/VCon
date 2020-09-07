@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 from resemblyzer import VoiceEncoder
@@ -13,11 +14,9 @@ class VCModel(nn.Module):
         self.speaker_encoder = VoiceEncoder()
 
     def forward(self, raw, spec):
-        if len(raw.shape) == 1:
-            raw = raw[None, :]
         # embed_utterance is implemented for single wav data.
         c_src = list(map(self.speaker_encoder.embed_utterance, raw))
-        c_src = torch.tensor(c_src, dtype=torch.float)
+        c_src = torch.tensor(c_src, dtype=torch.float).to(spec.device)
         out, diff = self.vq_vae(spec, c_src, c_src)
         return out, diff
 
