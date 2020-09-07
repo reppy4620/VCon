@@ -1,4 +1,6 @@
+import os
 import json
+import yaml
 
 
 class Map(dict):
@@ -47,7 +49,13 @@ class Map(dict):
 
 # load config file from json as dict which can be accessed like config.param
 def get_config(filename):
+    _, ext = os.path.splitext(filename)
     with open(filename, 'r') as f:
-        _config = json.load(f)
+        if ext == '.json':
+            _config = json.load(f)
+        elif ext == '.yaml':
+            _config = yaml.load(f, Loader=yaml.CLoader)
+        else:
+            raise ValueError('file extension must be .json or .yaml')
     config = Map(_config)
     return config
