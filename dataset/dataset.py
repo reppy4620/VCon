@@ -1,8 +1,10 @@
 from torch.utils.data import Dataset
 
 
+# Simple dataset
 class VCDataset(Dataset):
     def __init__(self, data):
+        # data = [(raw1, mel1), ...]
         self.data = data
 
     def __len__(self):

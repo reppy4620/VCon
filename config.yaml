@@ -11,6 +11,8 @@ train_ratio: 0.9
 speaker_emb_dim: 256
 # mel-spectrogram bin size
 mel_size: 80
+# sampling rate
+sampling_rate: 22050
 
 # vector-quantization params
 emb_dim: 64

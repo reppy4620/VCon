@@ -5,6 +5,7 @@ from pathlib import Path
 from joblib import Parallel, delayed
 
 
+# load data from preprocessed files
 def load_data(data_dir: Path):
     print('Load training data')
     fns = list(data_dir.glob('*.dat'))

@@ -1,6 +1,7 @@
 import torch.nn as nn
 
 
+# Linear layer whose weights are initialized.
 class LinearNorm(nn.Module):
     def __init__(self, in_dim, out_dim, bias=True, w_init_gain='linear'):
         super().__init__()
@@ -15,6 +16,7 @@ class LinearNorm(nn.Module):
         return self.linear(x)
 
 
+# Conv1d layer whose weights are  initialized.
 class ConvNorm(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=1, stride=1,
                  padding=None, dilation=1, bias=True, w_init_gain='linear'):

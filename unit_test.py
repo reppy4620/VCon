@@ -53,10 +53,11 @@ def melgan_test():
     fn = 'D:/dataset/seiyu/fujitou_normal/fujitou_normal_001.wav'
     vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     params = get_config('config.yaml')
-    _, _, mel = get_wav_mel(fn, vocoder)
+    _, mel = get_wav_mel(fn, vocoder)
     with torch.no_grad():
         audio = vocoder.inverse(mel.unsqueeze(0))[0]
     audio = audio.cpu().detach().numpy()
+    audio = (audio * 32768).astype('int16')
     write('./test.wav', params.sampling_rate, audio)
 
 
@@ -78,4 +79,4 @@ def data_load_test():
 
 
 if __name__ == '__main__':
-    data_load_test()
+    melgan_test()

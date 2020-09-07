@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 
+# from https://www.kaggle.com/hidehisaarai1213/introduction-to-sound-event-detection
 class DropStripes(nn.Module):
     def __init__(self, dim, drop_width, stripes_num):
         super(DropStripes, self).__init__()

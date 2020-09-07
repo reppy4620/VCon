@@ -12,11 +12,14 @@ class VConDataModule(pl.LightningDataModule):
 
     def __init__(self, params):
         super().__init__()
+        # params == config.yaml
         self.params = params
 
     def setup(self, stage=None):
         data = load_data(Path(self.params.data_dir))
         dataset = VCDataset(data)
+        # train valid split by using random_split
+        # random_split splits dataset to two subset
         train_size = int(self.params.train_ratio * len(dataset))
         valid_size = len(dataset) - train_size
         self.train_x, self.valid_x = random_split(dataset=dataset, lengths=[train_size, valid_size])

@@ -5,12 +5,16 @@ import torch.nn.functional as F
 from transforms import SpecAugmentation
 from nn import VCModel
 from optim import RAdam
+from utils import Map
 
 
 class VCModule(pl.LightningModule):
 
     def __init__(self, params):
         super().__init__()
+
+        if not isinstance(params, Map):
+            params = Map(params)
 
         self.params = params
 
