@@ -48,7 +48,7 @@ class VCModule(pl.LightningModule):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).sum()
         avg_l_recon = torch.stack([x['val_l_recon'] for x in outputs]).sum()
         avg_vq_loss = torch.stack([x['val_vq_loss'] for x in outputs]).sum()
-        log = {'avg_loss': avg_loss, 'avg_l_recon': avg_l_recon, 'avg_vq_loss': avg_vq_loss}
+        log = {'val_loss': avg_loss, 'avg_l_recon': avg_l_recon, 'avg_vq_loss': avg_vq_loss}
         return {'val_loss': avg_loss, 'log': log}
 
     def configure_optimizers(self):
