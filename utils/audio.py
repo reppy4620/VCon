@@ -21,8 +21,11 @@ def get_wav_mel(fn, to_mel=None):
     if to_mel is None:
         to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     wav, sr = librosa.load(fn)
-    wav = trim_long_silences(wav)
-    wav = 0.95 * librosa.util.normalize(wav)
+    trimmed = trim_long_silences(wav)
+    try:
+        wav = 0.95 * librosa.util.normalize(trimmed)
+    except:
+        wav = 0.95 * librosa.util.normalize(wav)
     mel = to_mel(torch.tensor(wav, dtype=torch.float).unsqueeze(0)).squeeze(0)
     return wav, mel.cpu()
 

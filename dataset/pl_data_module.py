@@ -25,7 +25,19 @@ class VConDataModule(pl.LightningDataModule):
         self.train_x, self.valid_x = random_split(dataset=dataset, lengths=[train_size, valid_size])
 
     def train_dataloader(self):
-        return DataLoader(self.train_x, batch_size=self.params.batch_size, shuffle=True, collate_fn=collate_fn)
+        return DataLoader(
+            self.train_x,
+            batch_size=self.params.batch_size,
+            shuffle=True,
+            collate_fn=collate_fn,
+            pin_memory=True
+        )
 
     def val_dataloader(self):
-        return DataLoader(self.valid_x, batch_size=self.params.batch_size, shuffle=False, collate_fn=collate_fn)
+        return DataLoader(
+            self.valid_x,
+            batch_size=self.params.batch_size,
+            shuffle=False,
+            collate_fn=collate_fn,
+            pin_memory=True
+        )

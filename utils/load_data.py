@@ -6,9 +6,9 @@ from joblib import Parallel, delayed
 
 
 # load data from preprocessed files
-def load_data(data_dir: Path, parallel: bool = True):
+def load_data(data_dir: Path, parallel: bool = False):
     print('Load training data')
-    fns = list(data_dir.glob('*.dat'))[:5]
+    fns = list(data_dir.glob('*.dat'))
     if parallel:
         data = Parallel(n_jobs=-1)(delayed(torch.load)(str(d)) for d in tqdm(fns, total=len(fns)))
     else:

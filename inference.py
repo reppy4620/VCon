@@ -13,6 +13,13 @@ if __name__ == '__main__':
     parser.add_argument('--out_path', type=str, default='./out.wav')
     args = parser.parse_args()
 
+    # args.src_path = 'D:/dataset/jvs/jvs001/nonpara30/wav24kHz16bit/BASIC5000_0025.wav'
+    # args.tgt_path = 'D:/dataset/jvs/jvs004/nonpara30/wav24kHz16bit/VOICEACTRESS100_003.wav'
+    args.src_path = 'D:/dataset/vctk/wav/p226/p226_002.wav'
+    args.src_path = 'D:/dataset/vctk/wav/p225/p225_001.wav'
+    args.config_path = 'configs/quartz.yaml'
+    args.ckpt_path = 'D:/models/'
+
     params = get_config(args.config_path)
 
     vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')

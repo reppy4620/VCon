@@ -1,7 +1,7 @@
 # experiment params
 exp_name: quartz
 seed: 42
-batch_size: 256
+batch_size: 512
 n_epochs: 100
 
 data_dir: D:/dataset/vctk/processed
@@ -21,7 +21,7 @@ optimizer:
 
 # encoder params
 encoder:
-  n_block: 5
+  n_block: 3
   n_layers: 5
   c_ins:
     - 256
@@ -38,9 +38,9 @@ encoder:
   kernels:
     - 11
     - 9
-    - 11
-    - 9
-    - 11
+    - 7
+    - 5
+    - 3
   strides:
     - 1
     - 1
@@ -50,13 +50,13 @@ encoder:
   pads:
     - 5
     - 4
-    - 5
-    - 4
-    - 5
+    - 3
+    - 2
+    - 1
 
 # decoder params
 decoder:
-  n_block: 5
+  n_block: 3
   n_layers: 5
   c_ins:
     - 512
@@ -73,9 +73,9 @@ decoder:
   kernels:
     - 11
     - 9
-    - 11
-    - 9
-    - 11
+    - 7
+    - 5
+    - 3
   strides:
     - 1
     - 1
@@ -85,6 +85,6 @@ decoder:
   pads:
     - 5
     - 4
-    - 5
-    - 4
-    - 5
+    - 3
+    - 2
+    - 1

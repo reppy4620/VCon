@@ -82,4 +82,4 @@ def trim_test():
 
 
 if __name__ == '__main__':
-    config_test()
+    quartz_test()
