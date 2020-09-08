@@ -1,0 +1,1 @@
+from .model_mixin import ModelMixin

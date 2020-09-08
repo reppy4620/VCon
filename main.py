@@ -1,20 +1,21 @@
+import sys
 import pathlib
+
 import pytorch_lightning as pl
-
-from pytorch_lightning.utilities.seed import seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.utilities.seed import seed_everything
 
-from nn import VCModule
 from dataset import VConDataModule
-from utils import get_config
-
+from utils import get_config, module_from_config
 
 if __name__ == '__main__':
-    config = get_config('config.yaml')
+
+    args = sys.argv
+    config = get_config(args[1])
 
     seed_everything(config.seed)
 
-    model = VCModule(config)
+    model = module_from_config(config)
     vcon_dm = VConDataModule(config)
 
     model_dir = pathlib.Path(config.model_dir)

@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .functions import tanhexp
-from .layers import ConvNorm, LinearNorm
+from nn.vq_vae_autovc.layers import ConvNorm, LinearNorm
 
 
 class Encoder(nn.Module):
@@ -39,7 +38,7 @@ class Encoder(nn.Module):
         x = torch.cat((x, c_src), dim=1)
 
         for conv in self.convolutions:
-            x = tanhexp(conv(x))
+            x = F.relu(conv(x))
         x = x.transpose(1, 2)
 
         self.lstm.flatten_parameters()
@@ -81,7 +80,7 @@ class Decoder(nn.Module):
 
         self.lstm2 = nn.LSTM(params.decoder.channel, params.decoder.channel*2, 2, batch_first=True)
 
-        self.linear_projection = LinearNorm(params.decoder.channel*2, 80)
+        self.linear_projection = LinearNorm(params.decoder.channel*2, params.mel_size)
 
     def forward(self, x, c_tgt):
 
@@ -92,7 +91,7 @@ class Decoder(nn.Module):
         x = x.transpose(1, 2)
 
         for conv in self.convolutions:
-            x = tanhexp(conv(x))
+            x = F.relu(conv(x))
         x = x.transpose(1, 2)
 
         outputs, _ = self.lstm2(x)
@@ -190,7 +189,7 @@ class VectorQuantizer(nn.Module):
             embed_normalized = self.embed_avg / cluster_size.unsqueeze(0)
             self.embed.data.copy_(embed_normalized)
 
-        diff = (quantize.detach() - input).pow(2).sum()
+        diff = (quantize.detach() - input).pow(2).mean()
         quantize = input + (quantize - input).detach()
 
         return quantize, diff, embed_ind

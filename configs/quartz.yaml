@@ -1,0 +1,90 @@
+# experiment params
+exp_name: quartz
+seed: 42
+batch_size: 256
+n_epochs: 100
+
+data_dir: D:/dataset/vctk/processed
+model_dir: D:/models/vcon/quartz
+train_ratio: 0.9
+
+# resemblyzer.VoiceEncoder encodes wav to 256-dim vector
+speaker_emb_dim: 256
+# mel-spectrogram bin size
+mel_size: 80
+# sampling rate
+sampling_rate: 22050
+
+# optimizer params
+optimizer:
+  lr: 0.001
+
+# encoder params
+encoder:
+  n_block: 5
+  n_layers: 5
+  c_ins:
+    - 256
+    - 256
+    - 256
+    - 512
+    - 512
+  c_outs:
+    - 256
+    - 256
+    - 512
+    - 512
+    - 512
+  kernels:
+    - 11
+    - 9
+    - 11
+    - 9
+    - 11
+  strides:
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+  pads:
+    - 5
+    - 4
+    - 5
+    - 4
+    - 5
+
+# decoder params
+decoder:
+  n_block: 5
+  n_layers: 5
+  c_ins:
+    - 512
+    - 512
+    - 512
+    - 256
+    - 256
+  c_outs:
+    - 512
+    - 512
+    - 256
+    - 256
+    - 256
+  kernels:
+    - 11
+    - 9
+    - 11
+    - 9
+    - 11
+  strides:
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+  pads:
+    - 5
+    - 4
+    - 5
+    - 4
+    - 5

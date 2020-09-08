@@ -12,7 +12,7 @@ class VConDataModule(pl.LightningDataModule):
 
     def __init__(self, params):
         super().__init__()
-        # params == config.yaml
+        # params == autovc_vqvae.yaml
         self.params = params
 
     def setup(self, stage=None):

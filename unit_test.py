@@ -1,45 +1,41 @@
-import librosa
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
 import pathlib
-from librosa.display import specshow
+
+import librosa
+import torch
 from scipy.io.wavfile import write
 
 from dataset import VConDataModule
-from nn import VCModel
-from utils import get_config, get_wav_mel, load_data
+from utils import (
+    get_config, get_wav_mel, load_data,
+    save_sample, trim_long_silences, model_from_config
+)
 
 
 def config_test():
-    config = get_config('config.yaml')
-    print(config.batch_size, config.encoder.n_layers)
+    config1 = get_config('configs/autovc_vqvae.yaml')
+    config2 = get_config('configs/quartz.yaml')
+    print(config1)
+    print(config2)
 
 
-def model_test():
+def autovc_base_vqvae_test():
     fn = 'D:/dataset/VCTK-Corpus/wav48/p225/p225_001.wav'
     to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-    params = get_config('config.yaml')
+    params = get_config('configs/autovc_vqvae.yaml')
     wav, _, mel = get_wav_mel(fn, to_mel)
-    model = VCModel(params)
+    model = model_from_config(params)
     out, _ = model(wav, mel.cpu().unsqueeze(0))
     print(mel.size(), out.size())
 
 
-def load_wav_file_test():
-    fn = 'D:/dataset/VCTK-Corpus/wav48/p225/p225_001.wav'
-    to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-    wav, _, mel = get_wav_mel(fn, to_mel)
-
-    plt.plot(wav)
-    plt.show()
-
-    specshow(np.log1p(mel.T))
-    plt.show()
-
-    wav = librosa.feature.inverse.mel_to_audio(mel.T)
-    plt.plot(wav)
-    plt.show()
+def quartz_test():
+    fn = 'D:/dataset/seiyu/fujitou_normal/fujitou_normal_001.wav'
+    vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
+    params = get_config('configs/quartz.yaml')
+    wav, mel = get_wav_mel(fn, vocoder)
+    model = model_from_config(params)
+    out = model([wav], mel.unsqueeze(0))
+    print(out.size())
 
 
 def load_wav_mel_test():
@@ -52,7 +48,7 @@ def load_wav_mel_test():
 def melgan_test():
     fn = 'D:/dataset/seiyu/fujitou_normal/fujitou_normal_001.wav'
     vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-    params = get_config('config.yaml')
+    params = get_config('configs/autovc_vqvae.yaml')
     _, mel = get_wav_mel(fn, vocoder)
     with torch.no_grad():
         audio = vocoder.inverse(mel.unsqueeze(0))[0]
@@ -62,7 +58,7 @@ def melgan_test():
 
 
 def data_loader_test():
-    params = get_config('config.yaml')
+    params = get_config('configs/autovc_vqvae.yaml')
     dm = VConDataModule(params)
     dm.setup()
     train_loader = dm.train_dataloader()
@@ -73,10 +69,17 @@ def data_loader_test():
 
 
 def data_load_test():
-    params = get_config('config.yaml')
+    params = get_config('configs/autovc_vqvae.yaml')
     a = load_data(pathlib.Path(params.data_dir))
     print(len(a))
 
 
+def trim_test():
+    fn = 'D:/dataset/vctk/wav/p226/p226_001.wav'
+    wav, sr = librosa.load(fn)
+    wav = trim_long_silences(wav)
+    save_sample('test2.wav', wav, sr)
+
+
 if __name__ == '__main__':
-    melgan_test()
+    config_test()

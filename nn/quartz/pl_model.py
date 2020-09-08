@@ -1,14 +1,14 @@
-import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
+import pytorch_lightning as pl
 
 from transforms import SpecAugmentation
-from nn import VCModel
+from .model import QuartzModel
 from optim import RAdam
 from utils import Map
 
 
-class VCModule(pl.LightningModule):
+class QuartzModule(pl.LightningModule):
 
     def __init__(self, params):
         super().__init__()
@@ -16,9 +16,9 @@ class VCModule(pl.LightningModule):
         if not isinstance(params, Map):
             params = Map(params)
 
-        self.params = params
+        self.hparams = params
 
-        self.model = VCModel(params)
+        self.model = QuartzModel(params)
 
         self.spec_augmenter = SpecAugmentation(
             time_drop_width=32,
@@ -32,28 +32,24 @@ class VCModule(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         wav, mel = batch
-        mel = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
-        out, vq_loss = self.model(wav, mel)
+        m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
+        out = self.model(wav, m)
         l_recon = F.mse_loss(mel, out)
-        loss = l_recon + vq_loss
 
-        log = {'loss': loss, 'l_recon': l_recon, 'diff': vq_loss}
-        return {'loss': loss, 'log': log}
+        log = {'loss': l_recon}
+        return {'loss': l_recon, 'log': log}
 
     def validation_step(self, batch, batch_idx):
         wav, mel = batch
-        out, vq_loss = self.model(wav, mel)
+        out = self.model(wav, mel)
         l_recon = F.mse_loss(mel, out)
-        loss = l_recon + vq_loss
 
-        return {'val_loss': loss, 'val_l_recon': l_recon, 'val_vq_loss': vq_loss}
+        return {'val_loss': l_recon}
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).sum()
-        avg_l_recon = torch.stack([x['val_l_recon'] for x in outputs]).sum()
-        avg_vq_loss = torch.stack([x['val_vq_loss'] for x in outputs]).sum()
-        log = {'val_loss': avg_loss, 'avg_l_recon': avg_l_recon, 'avg_vq_loss': avg_vq_loss}
+        log = {'val_loss': avg_loss}
         return {'val_loss': avg_loss, 'log': log}
 
     def configure_optimizers(self):
-        return RAdam(self.model.parameters(), self.params.optimizer.lr)
+        return RAdam(self.model.parameters(), self.hparams.optimizer.lr)

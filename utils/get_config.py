@@ -46,8 +46,27 @@ class Map(dict):
         super(Map, self).__delitem__(key)
         del self.__dict__[key]
 
+    def __getstate__(self):
+        return dict(self)
 
-# load config file from json as dict which can be accessed like config.param
+    def __setstate__(self, state):
+        return Map(state)
+
+
+def represent_odict(dumper, instance):
+    return dumper.represent_mapping('tag:yaml.org,2002:map', instance.items())
+
+
+def construct_odict(loader, node):
+    return Map(loader.construct_pairs(node))
+
+
+yaml.add_representer(Map, represent_odict)
+yaml.add_constructor('tag:yaml.org,2002:map', construct_odict)
+
+
+# Load config file from json or yaml which can be accessed like attributes of class
+# This project basically uses yaml.
 def get_config(filename):
     _, ext = os.path.splitext(filename)
     with open(filename, 'r') as f:

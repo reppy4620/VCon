@@ -1,11 +1,11 @@
 import torch
-import torch.nn as nn
 from resemblyzer import VoiceEncoder
 
-from .vq_vae import VQVAE
+from nn.base import ModelMixin
+from nn.vq_vae_autovc.vq_vae import VQVAE
 
 
-class VCModel(nn.Module):
+class AutoVCBaseVQVAEModel(ModelMixin):
     def __init__(self, params):
         super().__init__()
 
