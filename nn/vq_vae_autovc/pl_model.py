@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from transforms import SpecAugmentation
 from .model import AutoVCBaseVQVAEModel
 from optim import RAdam
-from utils import Map
+from utils import AttributeDict
 
 
 class AutoVCBaseVQVAEModule(pl.LightningModule):
@@ -13,27 +13,27 @@ class AutoVCBaseVQVAEModule(pl.LightningModule):
     def __init__(self, params):
         super().__init__()
 
-        if not isinstance(params, Map):
-            params = Map(params)
+        if not isinstance(params, AttributeDict):
+            params = AttributeDict(params)
 
         self.params = params
 
         self.model = AutoVCBaseVQVAEModel(params)
 
-        self.spec_augmenter = SpecAugmentation(
-            time_drop_width=32,
-            time_stripes_num=2,
-            freq_stripes_num=8,
-            freq_drop_width=2
-        )
+        # self.spec_augmenter = SpecAugmentation(
+        #     time_drop_width=32,
+        #     time_stripes_num=2,
+        #     freq_stripes_num=8,
+        #     freq_drop_width=2
+        # )
 
     def forward(self, raw_src, raw_tgt, spec_src):
         return self.model.inference(raw_src, raw_tgt, spec_src)
 
     def training_step(self, batch, batch_idx):
         wav, mel = batch
-        m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
-        out, vq_loss = self.model(wav, m)
+        # m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
+        out, vq_loss = self.model(wav, mel)
         l_recon = F.mse_loss(mel, out)
         loss = l_recon + vq_loss
 

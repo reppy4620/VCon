@@ -1,4 +1,5 @@
 import torch
+from torch.cuda.amp import autocast
 from resemblyzer import VoiceEncoder
 
 from nn.base import ModelMixin
@@ -13,9 +14,10 @@ class AutoVCBaseVQVAEModel(ModelMixin):
         self.speaker_encoder = VoiceEncoder()
         self.vocoder = None
 
+    @autocast
     def forward(self, raw, spec):
         # embed_utterance is implemented for single wav data.
-        c_src = list(map(self.speaker_encoder.embed_utterance, raw))
+        c_src = [self.speaker_encoder.embed_utterance(x) for x in raw]
         c_src = torch.tensor(c_src, dtype=torch.float).to(spec.device)
         out, diff = self.vq_vae(spec, c_src, c_src)
         return out, diff
@@ -37,5 +39,6 @@ class AutoVCBaseVQVAEModel(ModelMixin):
         c_src = torch.tensor(c_src, dtype=torch.float).unsqueeze(0)
         c_tgt = torch.tensor(c_tgt, dtype=torch.float).unsqueeze(0)
         out, _ = self.vq_vae(spec_src, c_src, c_tgt)
+        out = torch.log1p(out)
         wav = self.vocoder.inverse(out).squeeze(0).cpu().detach().numpy()
         return wav

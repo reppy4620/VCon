@@ -38,9 +38,9 @@ class DropStripes(nn.Module):
             bgn = torch.randint(low=0, high=total_width - distance, size=(1,))[0]
 
             if self.dim == 2:
-                e[:, bgn : bgn + distance, :] = 0
+                e[:, bgn:bgn + distance, :] = 0
             elif self.dim == 3:
-                e[:, :, bgn : bgn + distance] = 0
+                e[:, :, bgn:bgn + distance] = 0
 
 
 class SpecAugmentation(nn.Module):

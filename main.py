@@ -1,5 +1,5 @@
-import sys
 import pathlib
+from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -10,8 +10,15 @@ from utils import get_config, module_from_config
 
 if __name__ == '__main__':
 
-    args = sys.argv
-    config = get_config(args[1])
+    parser = ArgumentParser()
+    parser.add_argument('-c', '--config_path', type=str)
+    parser.add_argument('-d', '--data_dir', type=str)
+    parser.add_argument('-m', '--model_dir', type=str)
+    args = parser.parse_args()
+
+    config = get_config(args.config_path)
+    config.data_dir = args.data_dir
+    config.model_dir = args.model_dir
 
     seed_everything(config.seed)
 

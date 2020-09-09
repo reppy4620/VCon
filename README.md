@@ -1,6 +1,8 @@
 # VCon: Neural Voice-Conversion project
 &nbsp; VCon is Voice-Conversion project which is for my graduation research.
 
+Training process is now running with single GTX1080Ti, but good result may not be generated even if reconstruction in my situation.
+
 # Usage
 
 ## Preprocess

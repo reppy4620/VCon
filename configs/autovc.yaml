@@ -1,7 +1,7 @@
 # experiment params
-exp_name: autovc_vqvae
+exp_name: autovc
 seed: 42
-batch_size: 512
+batch_size: 128
 n_epochs: 100
 
 train_ratio: 0.9
@@ -22,21 +22,7 @@ optimizer:
   lr: 0.001
 
 # encoder params
-encoder:
-  n_conv: 3
-  channel: 256
-
-# EMA params in vq
-ema:
-  decay: 0.99
-  eps: 0.00005
-
-# decoder params
-decoder:
-  n_conv: 3
-  channel: 256
-
-# postnet params
-postnet:
-  n_layers: 5
-  channel: 256
+model:
+  dim_neck: 32
+  dim_pre: 512
+  freq: 32
