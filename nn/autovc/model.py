@@ -1,4 +1,5 @@
 import torch
+from torch.cuda.amp import autocast
 from resemblyzer import VoiceEncoder
 
 from .networks import ContentEncoder, Decoder, Postnet
@@ -17,6 +18,7 @@ class AutoVCModel(ModelMixin):
 
         self.vocoder = None
 
+    @autocast()
     def forward(self, raw, spec):
 
         c_src = [self.style_encoder.embed_utterance(x) for x in raw]
@@ -78,6 +80,5 @@ class AutoVCModel(ModelMixin):
 
         mel_outputs_postnet = self.postnet(mel_outputs)
         mel_outputs_postnet = mel_outputs + mel_outputs_postnet
-        mel_outputs_postnet = torch.log1p(mel_outputs_postnet)
         wav = self.vocoder.inverse(mel_outputs_postnet).squeeze(0).cpu().detach().numpy()
         return wav

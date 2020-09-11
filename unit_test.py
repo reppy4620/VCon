@@ -1,4 +1,3 @@
-import librosa
 import torch
 
 from dataset import VConDataModule
@@ -15,7 +14,7 @@ def config_test():
 
 
 def autovc_base_vqvae_test():
-    fn = ''
+    fn = 'D:/dataset/seiyu/fujitou_normal/fujitou_normal_001.wav'
     to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     params = get_config('configs/autovc_vqvae.yaml')
     wav, mel = get_wav_mel(fn, to_mel)
@@ -25,7 +24,7 @@ def autovc_base_vqvae_test():
 
 
 def quartz_test():
-    fn = ''
+    fn = 'D:/dataset/seiyu/fujitou_normal/fujitou_normal_001.wav'
     vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     params = get_config('configs/quartz.yaml')
     wav, mel = get_wav_mel(fn, vocoder)
@@ -35,7 +34,7 @@ def quartz_test():
 
 
 def autovc_test():
-    fn = ''
+    fn = 'D:/dataset/seiyu/fujitou_normal/fujitou_normal_001.wav'
     to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     params = get_config('configs/autovc.yaml')
     wav, mel = get_wav_mel(fn, to_mel)
@@ -45,22 +44,19 @@ def autovc_test():
 
 
 def load_wav_mel_test():
-    fn = ''
+    fn = 'D:/dataset/VCTK-Corpus/wav48/p225/p225_001.wav'
     to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     wav, _, mel = get_wav_mel(fn, to_mel)
     print(wav.size(), mel.size())
 
 
 def melgan_test():
-    fn = ''
+    fn = 'D:/dataset/vctk/wav/p225/p225_001.wav'
     vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-    params = get_config('configs/autovc_vqvae.yaml')
     wav, mel = get_wav_mel(fn, vocoder)
-    print(mel.min(), mel.max())
-    mel_exp = torch.expm1(mel)
-    print(mel_exp.min(), mel_exp.max())
-    mel = torch.log1p(mel_exp)
-    print(mel.min(), mel.max())
+    mel = torch.tanh(mel)
+    print(mel.min(), mel.max(), mel.mean())
+    mel = torch.atanh(mel)
     with torch.no_grad():
         audio = vocoder.inverse(mel.unsqueeze(0))[0]
     audio = audio.cpu().detach().numpy()
@@ -86,4 +82,4 @@ def data_loader_test():
 
 
 if __name__ == '__main__':
-    autovc_test()
+    melgan_test()

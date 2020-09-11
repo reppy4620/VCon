@@ -1,20 +1,19 @@
 import torch.nn as nn
-import torch.nn.functional as F
 
-from .layers import QuartzLayer, QuartzBlock
+from .layers import QuartzBlock
 
 
 class QuartzEncoder(nn.Module):
     def __init__(self, params):
         super().__init__()
 
-        self.in_layer = QuartzLayer(
+        self.in_layer = QuartzBlock(
             params.mel_size,
             params.encoder.c_ins[0],
             params.encoder.kernels[0],
             params.encoder.strides[0],
             params.encoder.pads[0],
-            F.relu
+            params.encoder.n_block
         )
 
         self.layers = nn.ModuleList()
@@ -41,13 +40,13 @@ class QuartzDecoder(nn.Module):
     def __init__(self, params):
         super().__init__()
 
-        self.in_layer = QuartzLayer(
+        self.in_layer = QuartzBlock(
             params.decoder.c_ins[0] + params.speaker_emb_dim,
             params.decoder.c_outs[0],
             params.decoder.kernels[0],
             params.decoder.strides[0],
             params.decoder.pads[0],
-            F.relu
+            params.decoder.n_block
         )
         self.layers = nn.ModuleList()
         for i in range(1, params.decoder.n_layers):

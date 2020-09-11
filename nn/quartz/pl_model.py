@@ -1,11 +1,10 @@
-import torch
-import torch.nn.functional as F
 import pytorch_lightning as pl
+import torch.nn.functional as F
 
-from transforms import SpecAugmentation
-from .model import QuartzModel
 from optim import RAdam
+from transforms import SpecAugmentation
 from utils import AttributeDict
+from .model import QuartzModel
 
 
 class QuartzModule(pl.LightningModule):
@@ -42,35 +41,31 @@ class QuartzModule(pl.LightningModule):
 
         loss = l_recon + l_cont
 
-        log = {'loss': loss, 'l_recon': l_recon, 'l_cont': l_cont}
-        return {'loss': loss, 'log': log}
+        result = pl.TrainResult(loss)
+        result.log_dict({
+            'train_loss': loss,
+            'l_recon': l_recon,
+            'l_cont': l_cont
+        }, on_epoch=True)
+        return result
 
     def validation_step(self, batch, batch_idx):
         wav, mel = batch
 
-        out, c_real, c_recon = self.model(wav, mel)
+        out, enc_real, enc_fake = self.model(wav, mel)
 
         l_recon = F.mse_loss(out, mel)
-        l_cont = F.l1_loss(c_real, c_recon)
+        l_cont = F.l1_loss(enc_fake, enc_real)
 
         loss = l_recon + l_cont
 
-        return {
+        result = pl.EvalResult(checkpoint_on=loss)
+        result.log_dict({
             'val_loss': loss,
             'val_l_recon': l_recon,
             'val_l_cont': l_cont
-        }
-
-    def validation_epoch_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        avg_l_recon = torch.stack([x['val_l_recon'] for x in outputs]).mean()
-        avg_l_cont = torch.stack([x['val_l_cont'] for x in outputs]).mean()
-        log = {
-            'val_loss': avg_loss,
-            'val_l_recon': avg_l_recon,
-            'val_l_cont': avg_l_cont
-        }
-        return {'val_loss': avg_loss, 'log': log}
+        }, prog_bar=True)
+        return result
 
     def configure_optimizers(self):
         return RAdam(self.model.parameters(), self.hparams.optimizer.lr)

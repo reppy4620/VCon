@@ -16,7 +16,6 @@ def get_wav_mel(fn, to_mel=None):
     except:
         wav = 0.95 * librosa.util.normalize(wav)
     mel = to_mel(torch.tensor(wav, dtype=torch.float)[None, :]).squeeze(0)
-    mel = torch.expm1(mel)
     return wav, mel.cpu()
 
 

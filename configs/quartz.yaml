@@ -2,7 +2,7 @@
 exp_name: quartz
 seed: 42
 batch_size: 256
-n_epochs: 300
+n_epochs: 1000
 
 train_ratio: 0.9
 
@@ -22,22 +22,22 @@ encoder:
   n_block: 5
   n_layers: 5
   c_ins:
-    - 256
-    - 256
-    - 256
     - 512
     - 512
+    - 256
+    - 256
+    - 128
   c_outs:
+    - 512
     - 256
     - 256
-    - 512
-    - 512
-    - 512
+    - 128
+    - 64
   kernels:
-    - 11
     - 9
     - 7
     - 5
+    - 3
     - 3
   strides:
     - 1
@@ -46,10 +46,10 @@ encoder:
     - 1
     - 1
   pads:
-    - 5
     - 4
     - 3
     - 2
+    - 1
     - 1
 
 # decoder params
@@ -57,23 +57,23 @@ decoder:
   n_block: 5
   n_layers: 5
   c_ins:
-    - 512
-    - 512
-    - 512
+    - 64
+    - 128
     - 256
     - 256
+    - 512
   c_outs:
+    - 128
+    - 256
+    - 256
     - 512
     - 512
-    - 256
-    - 256
-    - 256
   kernels:
-    - 11
     - 9
     - 7
     - 5
     - 3
+    - 1
   strides:
     - 1
     - 1
@@ -81,8 +81,8 @@ decoder:
     - 1
     - 1
   pads:
-    - 5
     - 4
     - 3
     - 2
     - 1
+    - 0

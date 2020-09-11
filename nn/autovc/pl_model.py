@@ -1,5 +1,4 @@
 import pytorch_lightning as pl
-import torch
 import torch.nn.functional as F
 
 from optim import RAdam
@@ -33,8 +32,15 @@ class AutoVCModule(pl.LightningModule):
 
         loss = l_recon + l_recon0 + l_cont
 
-        log = {'loss': loss, 'l_recon': l_recon, 'l_recon0': l_recon0, 'l_cont': l_cont}
-        return {'loss': loss, 'log': log}
+        result = pl.TrainResult(loss)
+        result.log_dict({
+            'loss': loss,
+            'l_recon': l_recon,
+            'l_recon0': l_recon0,
+            'l_cont': l_cont
+        }, on_epoch=True)
+
+        return result
 
     def validation_step(self, batch, batch_idx):
         wav, mel = batch
@@ -47,25 +53,15 @@ class AutoVCModule(pl.LightningModule):
 
         loss = l_recon + l_recon0 + l_cont
 
-        return {
+        result = pl.EvalResult(checkpoint_on=loss)
+        result.log_dict({
             'val_loss': loss,
             'val_l_recon': l_recon,
             'val_l_recon0': l_recon0,
             'val_l_cont': l_cont
-        }
+        }, prog_bar=True)
 
-    def validation_epoch_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        avg_l_recon = torch.stack([x['val_l_recon'] for x in outputs]).mean()
-        avg_l_recon0 = torch.stack([x['val_l_recon0'] for x in outputs]).mean()
-        avg_l_cont = torch.stack([x['val_l_cont'] for x in outputs]).mean()
-        log = {
-            'val_loss': avg_loss,
-            'val_l_recon': avg_l_recon,
-            'val_l_recon0': avg_l_recon0,
-            'val_l_cont': avg_l_cont
-        }
-        return {'val_loss': avg_loss, 'log': log}
+        return result
 
     def configure_optimizers(self):
         return RAdam(self.model.parameters(), self.hparams.optimizer.lr)

@@ -21,6 +21,7 @@ class VCDataset(Dataset):
         return wav, mel
 
 
+# This dataset for the person that doesn't want to run preprocess.py.
 class VCDatasetFromPath(Dataset):
     def __init__(self, data_dir):
         if isinstance(data_dir, pathlib.Path):

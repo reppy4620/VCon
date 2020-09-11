@@ -14,7 +14,7 @@ class AutoVCBaseVQVAEModel(ModelMixin):
         self.speaker_encoder = VoiceEncoder()
         self.vocoder = None
 
-    @autocast
+    @autocast()
     def forward(self, raw, spec):
         # embed_utterance is implemented for single wav data.
         c_src = [self.speaker_encoder.embed_utterance(x) for x in raw]

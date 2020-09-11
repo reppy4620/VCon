@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -49,6 +48,16 @@ class QuartzBlock(nn.Module):
                     act=F.relu
                 )
             )
+        self.layers.append(
+            QuartzLayer(
+                c_out,
+                c_out,
+                kernel,
+                stride,
+                pad,
+                act=None
+            )
+        )
 
         self.skip = nn.Sequential(
             # point-wise
@@ -56,17 +65,9 @@ class QuartzBlock(nn.Module):
             nn.BatchNorm1d(c_out)
         )
 
-        self.out = QuartzLayer(
-            c_out,
-            c_out,
-            kernel,
-            stride,
-            pad
-        )
-
     def forward(self, x):
-        out = x
-        for layer in self.layers:
-            out = layer(out)
         skip_out = self.skip(x)
-        return F.relu(out + skip_out)
+        for layer in self.layers:
+            x = layer(x)
+        x = F.relu(x + skip_out)
+        return x

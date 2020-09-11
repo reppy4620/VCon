@@ -1,7 +1,7 @@
 # experiment params
 exp_name: autovc
 seed: 42
-batch_size: 128
+batch_size: 64
 n_epochs: 100
 
 train_ratio: 0.9

@@ -18,6 +18,7 @@ class QuartzModel(ModelMixin):
 
         self.vocoder = None
 
+    @autocast()
     def forward(self, raw, spec):
         # raw: List[np.array], np.array: (L,), L = Length of raw wav data
         # spec: (B, M, T), B = BatchSize, M = MelSize, T = Time in Spectrogram
@@ -49,6 +50,6 @@ class QuartzModel(ModelMixin):
 
         out = self.encoder(spec_src)
         out = self.decoder(torch.cat([out, c_tgt], dim=1))
-        out = torch.log1p(out)
+        # l = torch.nn.functional.mse_loss(out, spec_src)
         wav = self.vocoder.inverse(out).squeeze(0).cpu().detach().numpy()
         return wav
