@@ -35,7 +35,6 @@ if __name__ == '__main__':
         gpus=1,
         checkpoint_callback=mc,
         max_epochs=config.n_epochs,
-        deterministic=True,
-        #resume_from_checkpoint='D:/models/vcon/autovc/vctk/vc_epoch=088-val_loss=0.01.ckpt'
+        deterministic=True
     )
     trainer.fit(model=model, datamodule=vcon_dm)

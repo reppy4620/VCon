@@ -155,3 +155,5 @@ ipython_config.py
 
 .idea
 ./notebooks/.ipynb_checkpoints
+test
+outputs

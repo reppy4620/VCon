@@ -28,12 +28,9 @@ if __name__ == '__main__':
     parser.add_argument('--out_path', type=str, default='./outputs')
     args = parser.parse_args()
 
-    args.config_path = 'configs/autovc.yaml'
-    args.ckpt_path = 'D:/models/vcon/autovc/vctk/vc_epoch=091-val_loss=0.01.ckpt'
-
     params = get_config(args.config_path)
 
-    out_dir = pathlib.Path(f'{args.out_path}/{os.path.splitext(args.config_path)[0]}')
+    out_dir = pathlib.Path(f'{args.out_path}/{os.path.splitext(os.path.basename(args.config_path))[0]}')
 
     if not out_dir.exists():
         out_dir.mkdir(parents=True)

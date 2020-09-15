@@ -1,12 +1,22 @@
 # VCon: Neural Voice-Conversion project
 &nbsp; VCon is Voice-Conversion project which is for my graduation research.
 
-Training process is now running with single GTX1080Ti, but good result may not be generated even if reconstruction in my situation.
-
 # Usage
 
+## Depending package
+
+- numpy
+- librosa
+- resemblyzer : [github](https://github.com/resemble-ai/Resemblyzer)
+- tqdm
+- pytorch
+- joblib
+
+This project depends on those packages.  
+If occur error because of missing package, please install that package.
+
 ## Preprocess
-&nbsp; Used dataset in this project is VCTK dataset.([link](http://www.udialogue.org/download/VCTK-Corpus.tar.gz))  
+&nbsp; Training data is VCTK dataset.([link](http://www.udialogue.org/download/VCTK-Corpus.tar.gz))  
 So you have to download this dataset before running preprocess.  
 
 And then, please execute following command.
@@ -36,3 +46,13 @@ $ python inference.py --src_path path/to/src.wav \
                       --ckpt_path path/to/model.ckpt \
                       --out_path path/to/output.wav
 ```
+
+# How to add different model
+1. Create model.py and pl_model.py file by using nn/autovc or nn/quartz as reference
+2. Add model class to dict in utils/from_config.py
+
+
+# Reference
+
+1. AutoVC : [paper](https://arxiv.org/abs/1905.05879), [github](https://github.com/auspicious3000/autovc)
+2. QuartzNet: [paper](https://arxiv.org/abs/1910.10261)
