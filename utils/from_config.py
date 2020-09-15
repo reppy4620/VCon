@@ -5,12 +5,14 @@ _model_dict = {
     'autovc': AutoVCModel,
     'autovc_vqvae': AutoVCBaseVQVAEModel,
     'quartz': QuartzModel,
+    'quartz_gan': QuartzModel
 }
 
 _module_dict = {
     'autovc': AutoVCModule,
     'autovc_vqvae': AutoVCBaseVQVAEModule,
     'quartz': QuartzModule,
+    'quartz_gan': QuartzGANModule,
 }
 
 

@@ -1,5 +1,6 @@
 import torch
 from pathlib import Path
+from functools import partial
 
 import pytorch_lightning as pl
 from torch.utils.data import random_split, DataLoader

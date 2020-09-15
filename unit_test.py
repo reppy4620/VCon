@@ -2,7 +2,8 @@ import torch
 
 from dataset import VConDataModule
 from utils import (
-    get_config, get_wav_mel, save_sample, model_from_config
+    get_config, get_wav_mel, save_sample, model_from_config,
+    normalize, denormalize
 )
 
 
@@ -34,12 +35,13 @@ def quartz_test():
 
 
 def autovc_test():
+    torch.backends.cudnn.enabled = False
     fn = 'D:/dataset/seiyu/fujitou_normal/fujitou_normal_001.wav'
     to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     params = get_config('configs/autovc.yaml')
     wav, mel = get_wav_mel(fn, to_mel)
-    model = model_from_config(params)
-    out_dec, out_ptnt, enc_real, enc_fake = model([wav], mel[None, :, :64])
+    model = model_from_config(params).cuda()
+    out_dec, out_ptnt, enc_real, enc_fake = model([wav], mel[None, :, :64].float().cuda())
     print(out_dec.size(), out_ptnt.size(), enc_real.size(), enc_fake.size())
 
 
@@ -54,9 +56,9 @@ def melgan_test():
     fn = 'D:/dataset/vctk/wav/p225/p225_001.wav'
     vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     wav, mel = get_wav_mel(fn, vocoder)
-    mel = torch.tanh(mel)
+    mel = normalize(mel)
+    mel = denormalize(mel)
     print(mel.min(), mel.max(), mel.mean())
-    mel = torch.atanh(mel)
     with torch.no_grad():
         audio = vocoder.inverse(mel.unsqueeze(0))[0]
     audio = audio.cpu().detach().numpy()
@@ -75,11 +77,20 @@ def data_loader_test():
     wavs = None
     for data in train_loader:
         wav, mel = data
+        print(mel.min(), mel.max(), mel.mean())
         res = vocoder.inverse(mel[:10, :, :]).cpu().detach().numpy()
         wavs = wav
         break
     [save_sample(f'./test_wav/test-{i}.wav', res[i]) for i in range(res.shape[0])]
 
 
+def normalize_test():
+    fn = 'D:/dataset/vctk/wav/p225/p225_001.wav'
+    vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
+    wav, mel = get_wav_mel(fn, vocoder)
+    m_norm = normalize(mel)
+    m_denorm = denormalize(m_norm)
+
+
 if __name__ == '__main__':
-    melgan_test()
+    autovc_test()

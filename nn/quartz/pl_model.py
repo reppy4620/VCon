@@ -34,9 +34,9 @@ class QuartzModule(pl.LightningModule):
 
         m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
 
-        out, enc_real, enc_fake = self.model(wav, m)
+        out_post, enc_real, enc_fake = self.model(wav, m)
 
-        l_recon = F.mse_loss(out, mel)
+        l_recon = F.mse_loss(out_post, mel)
         l_cont = F.l1_loss(enc_fake, enc_real)
 
         loss = l_recon + l_cont
@@ -52,9 +52,9 @@ class QuartzModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         wav, mel = batch
 
-        out, enc_real, enc_fake = self.model(wav, mel)
+        out_post, enc_real, enc_fake = self.model(wav, mel)
 
-        l_recon = F.mse_loss(out, mel)
+        l_recon = F.mse_loss(out_post, mel)
         l_cont = F.l1_loss(enc_fake, enc_real)
 
         loss = l_recon + l_cont

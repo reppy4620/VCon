@@ -6,3 +6,5 @@ from .quartz import QuartzModule
 
 from .autovc import AutoVCModel
 from .autovc import AutoVCModule
+
+from .quartz_gan import QuartzGANModule

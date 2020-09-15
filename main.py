@@ -36,7 +36,6 @@ if __name__ == '__main__':
         checkpoint_callback=mc,
         max_epochs=config.n_epochs,
         deterministic=True,
-        precision=16,
-        # resume_from_checkpoint='D:/models/vcon/quartz/vctk/vc_epoch=055-val_loss=0.06.ckpt'
+        #resume_from_checkpoint='D:/models/vcon/autovc/vctk/vc_epoch=088-val_loss=0.01.ckpt'
     )
     trainer.fit(model=model, datamodule=vcon_dm)

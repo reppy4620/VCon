@@ -1,9 +1,9 @@
 import torch
-from torch.cuda.amp import autocast
 from resemblyzer import VoiceEncoder
 
-from .networks import ContentEncoder, Decoder, Postnet
 from nn.base import ModelMixin
+from utils import denormalize
+from .networks import ContentEncoder, Decoder, Postnet
 
 
 class AutoVCModel(ModelMixin):
@@ -18,7 +18,6 @@ class AutoVCModel(ModelMixin):
 
         self.vocoder = None
 
-    @autocast()
     def forward(self, raw, spec):
 
         c_src = [self.style_encoder.embed_utterance(x) for x in raw]
@@ -29,8 +28,8 @@ class AutoVCModel(ModelMixin):
 
         tmp = []
         for code in codes:
-            tmp.append(code.unsqueeze(1).expand(-1, int(spec.size(-1) / len(codes)), -1))
-        code_exp = torch.cat(tmp, dim=1)
+            tmp.append(code.unsqueeze(-1).expand(-1, -1, int(spec.size(-1) / len(codes))))
+        code_exp = torch.cat(tmp, dim=-1)
 
         # (Batch, Mel-bin, Time) => (Batch, Time, Mel-bin) for LSTM
         encoder_outputs = torch.cat((code_exp, c_src), dim=1).transpose(1, 2)
@@ -70,8 +69,8 @@ class AutoVCModel(ModelMixin):
 
         tmp = []
         for code in codes:
-            tmp.append(code.unsqueeze(1).expand(-1, int(spec_src.size(-1) / len(codes)), -1))
-        code_exp = torch.cat(tmp, dim=1)
+            tmp.append(code.unsqueeze(-1).expand(-1, -1, int(spec_src.size(-1) / len(codes))))
+        code_exp = torch.cat(tmp, dim=-1)
 
         # (Batch, Mel-bin, Time) => (Batch, Time, Mel-bin) for LSTM
         encoder_outputs = torch.cat((code_exp, c_tgt), dim=1).transpose(1, 2)
@@ -80,5 +79,6 @@ class AutoVCModel(ModelMixin):
 
         mel_outputs_postnet = self.postnet(mel_outputs)
         mel_outputs_postnet = mel_outputs + mel_outputs_postnet
+        mel_outputs_postnet = denormalize(mel_outputs_postnet)
         wav = self.vocoder.inverse(mel_outputs_postnet).squeeze(0).cpu().detach().numpy()
         return wav

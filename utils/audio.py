@@ -19,7 +19,16 @@ def get_wav_mel(fn, to_mel=None):
     return wav, mel.cpu()
 
 
+def normalize(x):
+    return (20 * x + 100) / 100
+
+
+def denormalize(y):
+    return (100 * y - 100) / 20
+
+
 # save sample
-def save_sample(file_path, audio, sr=22050):
-    audio = (audio * 32768).astype("int16")
+def save_sample(file_path, audio, sr=22050, normalize=True):
+    if normalize:
+        audio = (audio * 32768).astype("int16")
     write(file_path, sr, audio)

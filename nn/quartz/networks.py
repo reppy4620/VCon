@@ -60,15 +60,22 @@ class QuartzDecoder(nn.Module):
                     params.decoder.n_block
                 )
             )
-        self.out_layer = nn.Conv1d(
-            params.decoder.c_outs[-1],
-            params.mel_size,
-            kernel_size=1
-        )
 
     def forward(self, x):
         x = self.in_layer(x)
         for layer in self.layers:
             x = layer(x)
-        x = self.out_layer(x)
         return x
+
+
+class QuartzPostNet(QuartzDecoder):
+    def __init__(self, params):
+        super().__init__(params)
+        self.in_layer = QuartzBlock(
+            params.mel_size,
+            params.decoder.c_outs[0],
+            params.decoder.kernels[0],
+            params.decoder.strides[0],
+            params.decoder.pads[0],
+            params.decoder.n_block
+        )

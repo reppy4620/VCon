@@ -1,9 +1,9 @@
 import torch
-from torch.cuda.amp import autocast
 from resemblyzer import VoiceEncoder
 
 from nn.base import ModelMixin
-from .networks import QuartzEncoder, QuartzDecoder
+from .networks import QuartzEncoder, QuartzDecoder, QuartzPostNet
+from utils import denormalize
 
 
 # Non-autoregressive VC model using QuartzNet architecture
@@ -13,12 +13,12 @@ class QuartzModel(ModelMixin):
 
         self.encoder = QuartzEncoder(params)
         self.decoder = QuartzDecoder(params)
+        self.postnet = QuartzPostNet(params)
 
         self.speaker_encoder = VoiceEncoder()
 
         self.vocoder = None
 
-    @autocast()
     def forward(self, raw, spec):
         # raw: List[np.array], np.array: (L,), L = Length of raw wav data
         # spec: (B, M, T), B = BatchSize, M = MelSize, T = Time in Spectrogram
@@ -30,8 +30,10 @@ class QuartzModel(ModelMixin):
         c_src = c_src.unsqueeze(-1).expand(-1, -1, spec.size(-1))
 
         z = self.encoder(spec)
-        out = self.decoder(torch.cat([z, c_src], dim=1))
-        return out, z, self.encoder(out)
+        out_dec = self.decoder(torch.cat([z, c_src], dim=1))
+        out_post = self.postnet(out_dec)
+        out_post = out_dec + out_post
+        return out_post, z, self.encoder(out_post)
 
     def inference(self, raw_src, raw_tgt, spec_src):
         if self.vocoder is None:
@@ -49,7 +51,9 @@ class QuartzModel(ModelMixin):
         c_tgt = c_tgt[None, :, None].expand(-1, -1, spec_src.size(-1))
 
         out = self.encoder(spec_src)
-        out = self.decoder(torch.cat([out, c_tgt], dim=1))
-        # l = torch.nn.functional.mse_loss(out, spec_src)
+        out_dec = self.decoder(torch.cat([out, c_tgt], dim=1))
+        out_post = self.postnet(out_dec)
+        out_post += out_dec
+        out = denormalize(out)
         wav = self.vocoder.inverse(out).squeeze(0).cpu().detach().numpy()
         return wav
