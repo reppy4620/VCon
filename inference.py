@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from utils import get_config, get_wav_mel, save_sample, module_from_config, normalize
 
 
+# for AutoVC model
 def _preprocess(mel, freq=32):
     t_dim = mel.size(-1)
     mod_val = t_dim % freq

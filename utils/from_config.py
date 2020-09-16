@@ -3,12 +3,14 @@ from nn import *
 
 _model_dict = {
     'autovc': AutoVCModel,
-    'quartz': QuartzModel
+    'quartz': QuartzModel,
+    'adain': AdaINVCModel
 }
 
 _module_dict = {
     'autovc': AutoVCModule,
     'quartz': QuartzModule,
+    'adain': AdaINVCModule
 }
 
 

@@ -7,7 +7,7 @@ from utils import normalize
 
 
 # lazy parameter settings
-_seq_len = 128  # 64 or 128
+_seq_len = 128  # 64 or 128 or 256
 
 
 def _preprocess(x):
