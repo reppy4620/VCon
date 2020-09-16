@@ -90,7 +90,7 @@ class DisLayer(nn.Module):
         super().__init__()
 
         self.conv1 = spectral_norm(nn.Conv1d(c_in, c_out, ks, padding=(ks-1)//2, padding_mode='reflect'))
-        self.conv2 = spectral_norm(nn.Conv1d(c_out, c_out, ks))
+        self.conv2 = spectral_norm(nn.Conv1d(c_out, c_out, ks, 2, padding=(ks-1)//2, padding_mode='reflect'))
 
     def forward(self, x):
         x = tanhexp(self.conv1(x))

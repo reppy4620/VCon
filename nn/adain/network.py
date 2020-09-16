@@ -82,19 +82,26 @@ class Discriminator(nn.Module):
     def __init__(self, params):
         super().__init__()
 
+        self.in_layer = DisLayer(
+            params.mel_size,
+            params.discriminator.channels[0],
+            params.discriminator.kernel_size
+        )
+
         self.layers = nn.ModuleList([
             DisLayer(
-                params.discriminator.channel*i,
-                params.discriminator.channel*i*2,
+                params.discriminator.channels[i],
+                params.discriminator.channels[i]*2,
                 params.discriminator.kernel_size,
-            ) for i in range(1, params.discriminator.n_layers)
+            ) for i in range(0, params.discriminator.n_layers-1)
         ])
         self.avg_layer = nn.AdaptiveAvgPool1d(1)
-        self.out_layer = nn.Conv1d(params.discriminator.channel*(params.discriminator.n_layers-1), 1, 1)
+        self.out_layer = nn.Conv1d(params.discriminator.channels[-1]*2, 1, 1)
 
     def forward(self, x):
+        x = self.in_layer(x)
         for layer in self.layers:
             x = layer(x)
         x = self.avg_layer(x)
-        x = self.out_layer(x)
+        x = self.out_layer(x).squeeze(-1)
         return x
