@@ -27,7 +27,7 @@ class ContentEncoder(nn.Module):
                     dilation=1,
                     w_init_gain='relu'
                 ),
-                nn.BatchNorm1d(512))
+                nn.BatchNorm1d(512, affine=True))
             convolutions.append(conv_layer)
         self.convolutions = nn.ModuleList(convolutions)
 
@@ -70,7 +70,7 @@ class Decoder(nn.Module):
                         padding=2,
                         dilation=1,
                         w_init_gain='relu'),
-                    nn.BatchNorm1d(dim_pre)
+                    nn.BatchNorm1d(dim_pre, affine=True)
                 )
             )
 
@@ -111,7 +111,7 @@ class Postnet(nn.Module):
                     dilation=1,
                     w_init_gain='tanh'
                 ),
-                nn.BatchNorm1d(512)
+                nn.BatchNorm1d(512, affine=True)
             )
         )
 
@@ -127,7 +127,7 @@ class Postnet(nn.Module):
                         dilation=1,
                         w_init_gain='tanh'
                     ),
-                    nn.BatchNorm1d(512)
+                    nn.BatchNorm1d(512, affine=True)
                 )
             )
 
@@ -142,7 +142,7 @@ class Postnet(nn.Module):
                     dilation=1,
                     w_init_gain='linear'
                 ),
-                nn.BatchNorm1d(80)
+                nn.BatchNorm1d(80, affine=True)
             )
         )
 

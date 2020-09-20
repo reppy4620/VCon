@@ -2,6 +2,7 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 
 from optim import RAdam
+from transforms import SpecAugmentation
 from utils import AttributeDict
 from .model import AutoVCModel
 
@@ -18,13 +19,22 @@ class AutoVCModule(pl.LightningModule):
 
         self.model = AutoVCModel(params)
 
+        self.spec_augmenter = SpecAugmentation(
+            time_drop_width=6,
+            time_stripes_num=2,
+            freq_drop_width=4,
+            freq_stripes_num=2
+        )
+
     def forward(self, raw_src, raw_tgt, spec_src):
         return self.model.inference(raw_src, raw_tgt, spec_src)
 
     def training_step(self, batch, batch_idx):
         wav, mel = batch
 
-        out_dec, out_psnt, c_real, c_recon = self.model(wav, mel)
+        m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
+
+        out_dec, out_psnt, c_real, c_recon = self.model(wav, m)
 
         l_recon0 = F.mse_loss(out_dec, mel)
         l_recon = F.mse_loss(out_psnt, mel)

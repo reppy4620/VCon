@@ -4,6 +4,7 @@ from nn.base import ModelMixin
 from .network import Encoder, Decoder
 
 from resemblyzer import VoiceEncoder
+from utils import denormalize
 
 
 class AdaINVCModel(ModelMixin):
@@ -35,10 +36,13 @@ class AdaINVCModel(ModelMixin):
         elif len(spec_src.size()) != 3:
             raise ValueError("len(spec_src.size()) must be 2 or 3")
 
-        cond = [self.speaker_encoder.embed_utterance(x) for x in raw_tgt]
-        cond = torch.tensor(cond, dtype=torch.float, device=spec_src.device)
+        cond = self.speaker_encoder.embed_utterance(raw_tgt)
+        cond = torch.tensor(cond[None, :], dtype=torch.float, device=spec_src.device)
 
         enc = self.encoder(spec_src)
         dec = self.decoder(enc, cond)
 
-        return dec
+        out = denormalize(dec)
+        wav = self.vocoder.inverse(out).squeeze(0).cpu().detach().numpy()
+
+        return wav

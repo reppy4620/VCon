@@ -1,6 +1,9 @@
-###########################################
-# preprocess VCTK and LibriTTS wav files
-###########################################
+#####################################################
+# Lazy implementation
+# I have to implement preprocess method in one file
+# Because this file has duplicate lines
+####################################################
+
 
 import argparse
 import torch
@@ -18,7 +21,7 @@ def process_one(fn, to_mel):
 
 
 def process_dir(data_dir, output_dir):
-    wav_files = data_dir.glob('**/*.wav')
+    wav_files = list(data_dir.glob('parallel100/wav24kHz16bit/*.wav')) + list(data_dir.glob('nonpara30/wav24kHz16bit/*.wav'))
     _wav_to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
     data = list()
     for fn in wav_files:

@@ -2,9 +2,9 @@
 exp_name: autovc
 seed: 42
 batch_size: 256
-n_epochs: 500
+n_epochs: 300
 
-train_ratio: 0.9
+train_ratio: 0.95
 
 # resemblyzer.VoiceEncoder encodes wav to 256-dim vector
 speaker_emb_dim: 256

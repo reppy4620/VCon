@@ -28,8 +28,8 @@ if __name__ == '__main__':
     model_dir = pathlib.Path(config.model_dir)
     if not model_dir.exists():
         model_dir.mkdir(parents=True)
-    save_fn = str(model_dir / 'vc_{epoch:03d}-{val_loss:.2f}')
-    mc = ModelCheckpoint(filepath=save_fn, save_top_k=3)
+    save_fn = str(model_dir / 'vc_{epoch:04d}-{val_loss:.6f}')
+    mc = ModelCheckpoint(filepath=save_fn, save_last=True, save_top_k=5)
 
     trainer = pl.Trainer(
         gpus=1,
