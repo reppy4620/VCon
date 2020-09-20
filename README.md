@@ -32,7 +32,7 @@ If your output_dir differ with output_dir property in configs/*.yaml, overwrite 
 
 ## Training
 
-Quartz example
+AutoVC example
 ```
 $ python main.py -c configs/autovc.yaml -d path/to/preprocessed_dir -m path/to/model_dir
 ```
