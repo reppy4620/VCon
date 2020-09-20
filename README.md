@@ -12,6 +12,7 @@ AutoVC model only can do voice conversion in my experiment.
 - resemblyzer : [github](https://github.com/resemble-ai/Resemblyzer)
 - tqdm
 - pytorch
+- pytorch-lightning
 - joblib
 
 This project depends on those packages.  
