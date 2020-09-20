@@ -24,6 +24,10 @@ class VConDataModule(pl.LightningDataModule):
         # default train_ratio = 0.9
         train_size = int(self.params.train_ratio * len(dataset))
         valid_size = len(dataset) - train_size
+        # Basically this method is not suitable for vc dataset because train and valid contain same speaker data.
+        # But I don't trust valid loss like seen in GAN training
+        # If you wanna implement method validly, please change some lines in utils/load_data.py to load train and valid data separately.
+        # In short, you have to split data when loads data from files.
         self.train_x, self.valid_x = random_split(
             dataset=dataset,
             lengths=[train_size, valid_size],

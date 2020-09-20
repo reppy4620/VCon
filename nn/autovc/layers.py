@@ -26,7 +26,8 @@ class ConvNorm(nn.Module):
 
         self.conv = nn.Conv1d(in_channels, out_channels,
                               kernel_size=kernel_size, stride=stride,
-                              padding=padding, dilation=dilation,
+                              padding=padding, padding_mode='reflect',
+                              dilation=dilation,
                               bias=bias)
 
         torch.nn.init.xavier_uniform_(

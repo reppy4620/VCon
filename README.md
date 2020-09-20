@@ -1,5 +1,7 @@
 # VCon: Neural Voice-Conversion project
-&nbsp; VCon is Voice-Conversion project which is for my graduation research.
+&nbsp; VCon is Voice-Conversion project.  
+AutoVC model only can do voice conversion in my experiment.
+
 
 # Usage
 
@@ -22,7 +24,7 @@ So you have to download this dataset before running preprocess.
 And then, please execute following command.
 
 ```
-$ python preprocess.py --dataset_dir path/to/VCTK-Corpus --output_dir path/to/output_dir
+$ python preprocess.py --dataset_dir path/to/VCTK-Corpus --output_dir path/to/preprocessed_dir
 ```
 
 When preprocess ends, .dat files per speaker are in output_dir.  
@@ -32,24 +34,24 @@ If your output_dir differ with output_dir property in configs/*.yaml, overwrite 
 
 Quartz example
 ```
-$ python main.py configs/quartz.yaml
+$ python main.py -c configs/autovc.yaml -d path/to/preprocessed_dir -m path/to/model_dir
 ```
 
 ## Inference
-If you trained quartz model, set config_path to configs/quartz.yaml
 
-Quartz example
+AutoVC example
 ```
 $ python inference.py --src_path path/to/src.wav \
                       --tgt_path path/to/tgt.wav \
-                      --config_path configs/quartz.yaml \
+                      --config_path configs/autovc.yaml \
                       --ckpt_path path/to/model.ckpt \
                       --out_path path/to/output.wav
 ```
 
 # How to add different model
-1. Create model.py and pl_model.py file by using nn/autovc or nn/quartz as reference
+1. Create model.py,  pl_model.py file by using nn/autovc or nn/quartz as reference
 2. Add model class to dict in utils/from_config.py
+3. Create a config file for new model.
 
 
 # Reference

@@ -93,7 +93,7 @@ class Discriminator(nn.Module):
                 params.discriminator.channels[i],
                 params.discriminator.channels[i]*2,
                 params.discriminator.kernel_size,
-            ) for i in range(0, params.discriminator.n_layers-1)
+            ) for i in range(params.discriminator.n_layers-1)
         ])
         self.avg_layer = nn.AdaptiveAvgPool1d(1)
         self.out_layer = nn.Conv1d(params.discriminator.channels[-1]*2, 1, 1)

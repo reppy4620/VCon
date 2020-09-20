@@ -1,7 +1,7 @@
 # experiment params
 exp_name: adain_gan
 seed: 42
-batch_size: 512
+batch_size: 1024
 n_epochs: 500
 
 train_ratio: 0.9
@@ -27,21 +27,20 @@ optimizer:
 encoder:
   bank_channel: 128
   n_bank: 4
-  channel: 128
+  channel: 256
   kernel_size: 5
-  n_layers: 5
+  n_layers: 4
 
 # decoder params
 decoder:
-  channel: 128
+  channel: 256
   kernel_size: 5
-  n_layers: 5
+  n_layers: 4
 
 discriminator:
   channels:
-    - 64
     - 128
     - 256
     - 512
-  n_layers: 5
+  n_layers: 4
   kernel_size: 5
