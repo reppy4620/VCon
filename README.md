@@ -46,7 +46,7 @@ $ python inference.py --src_path path/to/src.wav \
                       --tgt_path path/to/tgt.wav \
                       --config_path configs/autovc.yaml \
                       --ckpt_path path/to/model.ckpt \
-                      --out_path path/to/output.wav
+                      --output_dir path/to/output_dir
 ```
 
 # How to add different model

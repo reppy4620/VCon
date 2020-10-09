@@ -20,24 +20,9 @@ class AutoVCModel(ModelMixin):
 
     def forward(self, raw, spec):
 
-        c_src = [self.style_encoder.embed_utterance(x) for x in raw]
-        c_src = torch.tensor(c_src, dtype=torch.float, device=spec.device)
-        c_src = c_src[:, :, None].expand(-1, -1, spec.size(-1))
+        c_src = self._make_speaker_vectors(raw, spec.size(-1), spec.device)
 
-        codes = self.encoder(spec, c_src)
-
-        tmp = []
-        for code in codes:
-            tmp.append(code.unsqueeze(-1).expand(-1, -1, int(spec.size(-1) / len(codes))))
-        code_exp = torch.cat(tmp, dim=-1)
-
-        # (Batch, Mel-bin, Time) => (Batch, Time, Mel-bin) for LSTM
-        encoder_outputs = torch.cat((code_exp, c_src), dim=1).transpose(1, 2)
-
-        mel_outputs = self.decoder(encoder_outputs)
-
-        mel_outputs_postnet = self.postnet(mel_outputs)
-        mel_outputs_postnet = mel_outputs + mel_outputs_postnet
+        codes, mel_outputs, mel_outputs_postnet = self._forward(spec, c_src)
 
         return (
             mel_outputs,  # decoder output
@@ -57,28 +42,39 @@ class AutoVCModel(ModelMixin):
         elif len(spec_src.size()) != 3:
             raise ValueError("len(spec_src.size()) must be 2 or 3")
 
-        c_src = self.style_encoder.embed_utterance(raw_src)
-        c_src = torch.tensor(c_src, dtype=torch.float, device=spec_src.device)
-        c_src = c_src[None, :, None].expand(-1, -1, spec_src.size(-1))
+        c_src = self._make_speaker_vectors([raw_src], spec_src.size(-1), spec_src.device)
+        c_tgt = self._make_speaker_vectors([raw_tgt], spec_src.size(-1), spec_src.device)
 
-        c_tgt = self.style_encoder.embed_utterance(raw_tgt)
-        c_tgt = torch.tensor(c_tgt, dtype=torch.float, device=spec_src.device)
-        c_tgt = c_tgt[None, :, None].expand(-1, -1, spec_src.size(-1))
+        _, _, mel_outputs_postnet = self._forward(spec_src, c_src, c_tgt)
 
-        codes = self.encoder(spec_src, c_src)
+        wav = self._mel_to_wav(mel_outputs_postnet)
+        return wav
 
-        tmp = []
-        for code in codes:
-            tmp.append(code.unsqueeze(-1).expand(-1, -1, int(spec_src.size(-1) / len(codes))))
-        code_exp = torch.cat(tmp, dim=-1)
+    def _forward(self, spec, c_src, c_tgt=None):
+
+        codes = self.encoder(spec, c_src)
+        code_exp = torch.cat(
+            [c.unsqueeze(-1).expand(-1, -1, spec.size(-1) // len(codes)) for c in codes],
+            dim=-1
+        )
 
         # (Batch, Mel-bin, Time) => (Batch, Time, Mel-bin) for LSTM
-        encoder_outputs = torch.cat((code_exp, c_tgt), dim=1).transpose(1, 2)
+        decoder_input = torch.cat((code_exp, c_src if c_tgt is None else c_tgt), dim=1).transpose(1, 2)
 
-        mel_outputs = self.decoder(encoder_outputs)
+        mel_outputs = self.decoder(decoder_input)
 
         mel_outputs_postnet = self.postnet(mel_outputs)
         mel_outputs_postnet = mel_outputs + mel_outputs_postnet
-        mel_outputs_postnet = denormalize(mel_outputs_postnet)
-        wav = self.vocoder.inverse(mel_outputs_postnet).squeeze(0).cpu().detach().numpy()
+
+        return codes, mel_outputs, mel_outputs_postnet
+
+    def _make_speaker_vectors(self, raw, time_size, device):
+        c = [self.style_encoder.embed_utterance(x) for x in raw]
+        c = torch.tensor(c, dtype=torch.float, device=device)
+        c = c[:, :, None].expand(-1, -1, time_size)
+        return c
+
+    def _mel_to_wav(self, mel):
+        mel = denormalize(mel)
+        wav = self.vocoder.inverse(mel).squeeze(0).detach().cpu().numpy()
         return wav

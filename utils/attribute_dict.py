@@ -24,7 +24,7 @@ class AttributeDict(dict):
                     self[k] = v
 
         if kwargs:
-            for k, v in kwargs.iteritems():
+            for k, v in kwargs.items():
                 self[k] = v
 
     def __getattr__(self, attr):
@@ -52,7 +52,6 @@ class AttributeDict(dict):
 
 
 # for dumping to pickle by using torch.save
-
 def represent_odict(dumper, instance):
     return dumper.represent_mapping('tag:yaml.org,2002:map', instance.items())
 

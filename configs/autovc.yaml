@@ -1,8 +1,8 @@
 # experiment params
 exp_name: autovc
 seed: 42
-batch_size: 256
-n_epochs: 300
+batch_size: 512
+n_epochs: 200
 
 train_ratio: 0.95
 
@@ -13,10 +13,6 @@ mel_size: 80
 # sampling rate
 sampling_rate: 22050
 
-# vector-quantization params
-emb_dim: 64
-n_embed: 256
-
 # optimizer params
 optimizer:
   lr: 0.001
@@ -25,4 +21,4 @@ optimizer:
 model:
   dim_neck: 32
   dim_pre: 512
-  freq: 32
+  freq: 16

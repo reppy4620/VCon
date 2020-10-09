@@ -35,6 +35,8 @@ if __name__ == '__main__':
         gpus=1,
         checkpoint_callback=mc,
         max_epochs=config.n_epochs,
+        check_val_every_n_epoch=20,
+        gradient_clip_val=5.0,
         deterministic=True
     )
     trainer.fit(model=model, datamodule=vcon_dm)
