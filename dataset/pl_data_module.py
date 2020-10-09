@@ -40,7 +40,8 @@ class VConDataModule(pl.LightningDataModule):
             batch_size=self.params.batch_size,
             shuffle=True,
             collate_fn=collate_fn,
-            pin_memory=True
+            pin_memory=True,
+            num_workers=8
         )
 
     def val_dataloader(self):
@@ -49,5 +50,6 @@ class VConDataModule(pl.LightningDataModule):
             batch_size=self.params.batch_size,
             shuffle=False,
             collate_fn=collate_fn,
-            pin_memory=True
+            pin_memory=True,
+            num_workers=8
         )

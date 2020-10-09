@@ -16,9 +16,8 @@ class ContentEncoder(nn.Module):
         self.dim_neck = dim_neck
         self.freq = freq
 
-        convolutions = []
-        for i in range(3):
-            conv_layer = nn.Sequential(
+        self.convolutions = nn.ModuleList([
+            nn.Sequential(
                 ConvNorm(
                     in_channels=80 + dim_emb if i == 0 else 512,
                     out_channels=512,
@@ -27,9 +26,9 @@ class ContentEncoder(nn.Module):
                     dilation=1,
                     w_init_gain='relu'
                 ),
-                nn.BatchNorm1d(512, affine=True))
-            convolutions.append(conv_layer)
-        self.convolutions = nn.ModuleList(convolutions)
+                nn.BatchNorm1d(512, affine=True)
+            ) for i in range(3)
+        ])
 
         self.lstm = nn.LSTM(512, dim_neck, 2, batch_first=True, bidirectional=True)
 
@@ -45,9 +44,17 @@ class ContentEncoder(nn.Module):
         out_forward = outputs[:, :, :self.dim_neck]
         out_backward = outputs[:, :, self.dim_neck:]
 
-        codes = []
-        for i in range(0, outputs.size(1), self.freq):
-            codes.append(torch.cat((out_forward[:, i + self.freq - 1, :], out_backward[:, i, :]), dim=-1))
+        # Author's implementation is different from paper.
+        # In paper, author uses time steps {0, 32, 64, ...} for forward output
+        # and for backward output, he uses time steps {31, 63, 95, ...},
+        # but in github repo, he uses {31, 63, 95, ...} for former and {0, 32, 64, ...} for latter.
+        # Therefore, I changed this part to match the paper.
+        codes = [
+            torch.cat(
+                (out_forward[:, i, :], out_backward[:, i + self.freq - 1, :]),
+                dim=-1
+            ) for i in range(0, outputs.size(1), self.freq)
+        ]
 
         return codes
 
@@ -58,25 +65,23 @@ class Decoder(nn.Module):
 
         self.lstm1 = nn.LSTM(dim_neck * 2 + dim_emb, dim_pre, 1, batch_first=True)
 
-        self.convolutions = nn.ModuleList()
-        for i in range(3):
-            self.convolutions.append(
-                nn.Sequential(
-                    ConvNorm(
-                        in_channels=dim_pre,
-                        out_channels=dim_pre,
-                        kernel_size=5,
-                        stride=1,
-                        padding=2,
-                        dilation=1,
-                        w_init_gain='relu'),
-                    nn.BatchNorm1d(dim_pre, affine=True)
-                )
-            )
+        self.convolutions = nn.ModuleList([
+            nn.Sequential(
+                ConvNorm(
+                    in_channels=dim_pre,
+                    out_channels=dim_pre,
+                    kernel_size=5,
+                    stride=1,
+                    padding=2,
+                    dilation=1,
+                    w_init_gain='relu'),
+                nn.BatchNorm1d(dim_pre, affine=True)
+            ) for _ in range(3)
+        ])
 
-        self.lstm2 = nn.LSTM(dim_pre, 1024, 2, batch_first=True)
+        self.lstm2 = nn.LSTM(dim_pre, dim_pre, 2, batch_first=True)
 
-        self.linear_projection = LinearNorm(1024, 80)
+        self.linear_projection = LinearNorm(dim_pre, 80)
 
     def forward(self, x):
 
@@ -98,12 +103,10 @@ class Postnet(nn.Module):
 
     def __init__(self):
         super(Postnet, self).__init__()
-        self.convolutions = nn.ModuleList()
-
-        self.convolutions.append(
+        self.convolutions = nn.ModuleList([
             nn.Sequential(
                 ConvNorm(
-                    in_channels=80,
+                    in_channels=80 if i == 0 else 512,
                     out_channels=512,
                     kernel_size=5,
                     stride=1,
@@ -112,37 +115,19 @@ class Postnet(nn.Module):
                     w_init_gain='tanh'
                 ),
                 nn.BatchNorm1d(512, affine=True)
-            )
-        )
+            ) for i in range(5-1)
+        ])
 
-        for i in range(1, 5 - 1):
-            self.convolutions.append(
-                nn.Sequential(
-                    ConvNorm(
-                        in_channels=512,
-                        out_channels=512,
-                        kernel_size=5,
-                        stride=1,
-                        padding=2,
-                        dilation=1,
-                        w_init_gain='tanh'
-                    ),
-                    nn.BatchNorm1d(512, affine=True)
-                )
-            )
-
+        # paper indicates that bn and act is not applied after last convolution
         self.convolutions.append(
-            nn.Sequential(
-                ConvNorm(
-                    in_channels=512,
-                    out_channels=80,
-                    kernel_size=5,
-                    stride=1,
-                    padding=2,
-                    dilation=1,
-                    w_init_gain='linear'
-                ),
-                nn.BatchNorm1d(80, affine=True)
+            ConvNorm(
+                in_channels=512,
+                out_channels=80,
+                kernel_size=5,
+                stride=1,
+                padding=2,
+                dilation=1,
+                w_init_gain='linear'
             )
         )
 
