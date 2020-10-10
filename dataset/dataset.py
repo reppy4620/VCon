@@ -4,44 +4,38 @@ import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from utils import get_wav_mel
+from utils import get_wav
 
 
 # Simple dataset
 class VCDataset(Dataset):
     def __init__(self, data):
-        # data = [(raw1, mel1), ...]
+        # data = [raw1, ...]
         self.data = data
+        self.wav_to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan').fft.cpu()
+        for p in self.wav_to_mel.parameters():
+            p.requires_grad = False
+        self.wav_to_mel.eval()
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        wav, mel = self.data[idx]
+        wav = self.data[idx]
+        mel = self.wav_to_mel(torch.tensor(wav, dtype=torch.float)[None, None, :]).squeeze(0)
         return wav, mel
 
 
 # This dataset for the person that doesn't want to run preprocess.py.
 class VCDatasetFromPath(Dataset):
-    def __init__(self, data_dir):
-        if isinstance(data_dir, pathlib.Path):
-            data_dir = data_dir
-        elif isinstance(data_dir, str):
-            data_dir = pathlib.Path(data_dir)
-        else:
-            raise ValueError('data_dir must be pathlib.Path or str')
-
-        self.data = list()
-        to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-
-        fns = list(data_dir.glob('**/*.wav'))
-        for fn in tqdm(fns, desc='Load Training Data', total=len(fns)):
-            wav, mel = get_wav_mel(fn, to_mel=to_mel)
-            self.data.append((wav, mel))
+    def __init__(self, fns):
+        self.fns = fns
+        self.wav_to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
 
     def __len__(self):
-        return len(self.data)
+        return len(self.fns)
 
     def __getitem__(self, idx):
-        wav, mel = self.data[idx]
+        wav = get_wav(self.fns[idx])
+        mel = self.wav_to_mel(torch.tensor(wav, dtype=torch.float)[None, None, :]).squeeze(0)
         return wav, mel

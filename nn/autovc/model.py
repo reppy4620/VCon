@@ -53,6 +53,7 @@ class AutoVCModel(ModelMixin):
     def _forward(self, spec, c_src, c_tgt=None):
 
         codes = self.encoder(spec, c_src)
+        # almost equivalent to torch.nn.functional.interpolate
         code_exp = torch.cat(
             [c.unsqueeze(-1).expand(-1, -1, spec.size(-1) // len(codes)) for c in codes],
             dim=-1

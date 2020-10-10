@@ -41,13 +41,12 @@ class QuartzModule(pl.LightningModule):
 
         loss = l_recon + l_cont
 
-        result = pl.TrainResult(loss)
-        result.log_dict({
+        self.log_dict({
             'train_loss': loss,
             'l_recon': l_recon,
             'l_cont': l_cont
         }, on_epoch=True)
-        return result
+        return loss
 
     def validation_step(self, batch, batch_idx):
         wav, mel = batch
@@ -59,13 +58,12 @@ class QuartzModule(pl.LightningModule):
 
         loss = l_recon + l_cont
 
-        result = pl.EvalResult(checkpoint_on=loss)
-        result.log_dict({
+        self.log_dict({
             'val_loss': loss,
             'val_l_recon': l_recon,
             'val_l_cont': l_cont
         }, prog_bar=True)
-        return result
+        return loss
 
     def configure_optimizers(self):
         return RAdam(self.model.parameters(), self.hparams.optimizer.lr)

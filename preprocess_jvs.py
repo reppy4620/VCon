@@ -12,20 +12,19 @@ from pathlib import Path
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
-from utils import get_wav_mel
+from utils import get_wav
 
 
-def process_one(fn, to_mel):
-    wav, mel = get_wav_mel(fn, to_mel)
-    return wav, mel
+def process_one(fn):
+    wav = get_wav(fn)
+    return wav
 
 
 def process_dir(data_dir, output_dir):
     wav_files = list(data_dir.glob('parallel100/wav24kHz16bit/*.wav')) + list(data_dir.glob('nonpara30/wav24kHz16bit/*.wav'))
-    _wav_to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-    data = list()
-    for fn in wav_files:
-        data.append(process_one(fn, _wav_to_mel))
+    if len(wav_files) == 0:
+        return
+    data = [process_one(fn) for fn in wav_files]
     torch.save(data, output_dir / str(data_dir.name + '.dat'))
 
 

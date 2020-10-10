@@ -4,7 +4,7 @@ seed: 42
 batch_size: 512
 n_epochs: 200
 
-train_ratio: 0.95
+train_ratio: 0.98
 
 # resemblyzer.VoiceEncoder encodes wav to 256-dim vector
 speaker_emb_dim: 256
@@ -21,4 +21,4 @@ optimizer:
 model:
   dim_neck: 32
   dim_pre: 512
-  freq: 16
+  freq: 32

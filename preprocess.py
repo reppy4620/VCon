@@ -20,9 +20,7 @@ def process_one(fn, to_mel):
 def process_dir(data_dir, output_dir):
     wav_files = data_dir.glob('**/*.wav')
     _wav_to_mel = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-    data = list()
-    for fn in wav_files:
-        data.append(process_one(fn, _wav_to_mel))
+    data = [process_one(fn, _wav_to_mel) for fn in wav_files]
     torch.save(data, output_dir / str(data_dir.name + '.dat'))
 
 
