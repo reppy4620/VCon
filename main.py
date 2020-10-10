@@ -3,7 +3,6 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.utilities.seed import seed_everything
 
 from dataset import VConDataModule
 from utils import get_config, module_from_config
@@ -20,7 +19,7 @@ if __name__ == '__main__':
     config.data_dir = args.data_dir
     config.model_dir = args.model_dir
 
-    seed_everything(config.seed)
+    pl.seed_everything(config.seed)
 
     model = module_from_config(config)
     vcon_dm = VConDataModule(config)
@@ -29,13 +28,16 @@ if __name__ == '__main__':
     if not model_dir.exists():
         model_dir.mkdir(parents=True)
     save_fn = str(model_dir / 'vc_{epoch:04d}-{val_loss:.6f}')
-    mc = ModelCheckpoint(filepath=save_fn, save_last=True, save_top_k=5)
+    mc = ModelCheckpoint(
+        filepath=save_fn,
+        save_last=True,
+        save_top_k=5
+    )
 
     trainer = pl.Trainer(
         gpus=1,
         checkpoint_callback=mc,
         max_epochs=config.n_epochs,
-        check_val_every_n_epoch=20,
         gradient_clip_val=5.0,
         deterministic=True
     )

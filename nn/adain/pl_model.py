@@ -39,11 +39,10 @@ class AdaINVCModule(pl.LightningModule):
 
         l_recon = F.l1_loss(out, mel)
 
-        result = pl.TrainResult(l_recon)
-        result.log_dict({
+        self.log_dict({
             'train_loss': l_recon,
         }, on_epoch=True)
-        return result
+        return l_recon
 
     def validation_step(self, batch, batch_idx):
         wav, mel = batch
@@ -52,11 +51,10 @@ class AdaINVCModule(pl.LightningModule):
 
         l_recon = F.l1_loss(out, mel)
 
-        result = pl.EvalResult(checkpoint_on=l_recon)
-        result.log_dict({
+        self.log_dict({
             'val_loss': l_recon,
         }, prog_bar=True)
-        return result
+        return l_recon
 
     def configure_optimizers(self):
         return RAdam(self.model.parameters(), self.hparams.optimizer.lr)

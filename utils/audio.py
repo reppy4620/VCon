@@ -5,6 +5,17 @@ from resemblyzer import trim_long_silences
 from scipy.io.wavfile import write
 
 
+# load raw wav
+def get_wav(fn):
+    wav, sr = librosa.load(fn)
+    trimmed = trim_long_silences(wav)
+    try:
+        wav = 0.95 * librosa.util.normalize(trimmed)
+    except:
+        wav = 0.95 * librosa.util.normalize(wav)
+    return wav
+
+
 # load raw wav and mel-spectrogram from fn by using official melgan's converter
 def get_wav_mel(fn, to_mel=None):
     if to_mel is None:

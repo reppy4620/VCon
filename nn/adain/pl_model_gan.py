@@ -48,13 +48,12 @@ class AdaINGANModule(pl.LightningModule):
 
             loss_d = loss_d_real + loss_d_fake
 
-            result = pl.TrainResult(loss_d)
-            result.log_dict({
+            self.log_dict({
                 'loss_d': loss_d,
                 'loss_d_real': loss_d_real,
                 'loss_d_fake': loss_d_fake
             })
-            return result
+            return loss_d
 
         elif optimizer_idx == 1:
             g_pred_fake = self.discriminator(fake)
@@ -64,13 +63,12 @@ class AdaINGANModule(pl.LightningModule):
 
             loss_g = loss_g_gan + loss_recon * 10
 
-            result = pl.TrainResult(loss_g)
-            result.log_dict({
+            self.log_dict({
                 'loss_g': loss_g,
                 'loss_g_gan': loss_g_gan,
                 'loss_recon': loss_recon,
             }, on_epoch=True)
-            return result
+            return loss_g
 
     def validation_step(self, batch, batch_idx):
         wav, mel = batch
@@ -79,11 +77,10 @@ class AdaINGANModule(pl.LightningModule):
 
         l_recon = F.l1_loss(out, mel)
 
-        result = pl.EvalResult(checkpoint_on=l_recon)
-        result.log_dict({
+        self.log_dict({
             'val_loss': l_recon,
         }, prog_bar=True)
-        return result
+        return l_recon
 
     def configure_optimizers(self):
         optD = RAdam(
