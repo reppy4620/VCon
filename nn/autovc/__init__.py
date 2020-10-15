@@ -1,2 +1,4 @@
 from .pl_model import AutoVCModule
-from .model import AutoVCModel
+from .normal import NormalAutoVCModel
+from .attention import AttnAutoVCModel
+from .vq import VQAutoVCModel, VQAutoVCModule

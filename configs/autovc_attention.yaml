@@ -1,5 +1,5 @@
 # experiment params
-exp_name: autovc
+exp_name: autovc_attention
 seed: 42
 batch_size: 512
 n_epochs: 200
@@ -21,4 +21,3 @@ optimizer:
 model:
   dim_neck: 32
   dim_pre: 512
-  freq: 16

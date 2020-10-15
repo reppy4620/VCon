@@ -1,13 +1,11 @@
 # experiment params
-exp_name: autovc
+exp_name: vqvc
 seed: 42
 batch_size: 512
-n_epochs: 200
+n_epochs: 500
 
 train_ratio: 0.98
 
-# resemblyzer.VoiceEncoder encodes wav to 256-dim vector
-speaker_emb_dim: 256
 # mel-spectrogram bin size
 mel_size: 80
 # sampling rate
@@ -19,6 +17,7 @@ optimizer:
 
 # model params
 model:
-  dim_neck: 32
-  dim_pre: 512
-  freq: 16
+  in_channel: 80
+  channel: 512
+  n_embed: 128
+  num_groups: 4
