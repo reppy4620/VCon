@@ -12,7 +12,6 @@ _seq_len = 128  # 64 or 128 or 256
 
 def _preprocess(x):
     if x.size(-1) < _seq_len:
-        print('less')
         x = F.pad(x[None, :, :], [0, _seq_len - x.size(-1)], mode='replicate').squeeze(0)
     max_offset = x.size(-1) - _seq_len
     # generate int value from range of 0 <= sig_offset <= max_offset
