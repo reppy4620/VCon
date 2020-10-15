@@ -26,12 +26,12 @@ if __name__ == '__main__':
     parser.add_argument('--tgt_path', type=str)
     parser.add_argument('--config_path', type=str)
     parser.add_argument('--ckpt_path', type=str)
-    parser.add_argument('--output_dir', type=str, default='./outputs')
+    parser.add_argument('--output_dir', type=str, default='./outputs/vqvc')
     args = parser.parse_args()
 
     params = get_config(args.config_path)
 
-    output_dir = pathlib.Path(args.output_dir)
+    output_dir = pathlib.Path(args.output_dir) / args.ckpt_path.split('/')[-2]
 
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
@@ -40,7 +40,10 @@ if __name__ == '__main__':
     src_wav, src_mel = get_wav_mel(args.src_path)
     tgt_wav, _ = get_wav_mel(args.tgt_path)
 
-    src_mel = _preprocess(src_mel, freq=params.model.freq)
+    if 'autovc' in params.exp_name:
+        src_mel = _preprocess(src_mel, freq=params.model.freq)
+    elif 'vqvc' in params.exp_name:
+        src_mel = _preprocess(src_mel, freq=4)
 
     print('Build model')
     model = module_from_config(params)

@@ -1,5 +1,5 @@
 # experiment params
-exp_name: autovc
+exp_name: autovc_vq
 seed: 42
 batch_size: 512
 n_epochs: 200
@@ -22,3 +22,6 @@ model:
   dim_neck: 32
   dim_pre: 512
   freq: 16
+
+  n_embeddings: 512
+  embedding_dim: 32

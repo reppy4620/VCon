@@ -1,15 +1,13 @@
 import pytorch_lightning as pl
 import torch.nn.functional as F
 
-from .normal import NormalAutoVCModel
-from .attention import AttnAutoVCModel
-
+from .model import VQAutoVCModel
 from optim import RAdam
 from transforms import SpecAugmentation
 from utils import AttributeDict
 
 
-class AutoVCModule(pl.LightningModule):
+class VQAutoVCModule(pl.LightningModule):
 
     def __init__(self, params):
         super().__init__()
@@ -19,10 +17,7 @@ class AutoVCModule(pl.LightningModule):
 
         self.hparams = params
 
-        if params.exp_name == 'autovc' or params.exp_name == 'autovc_normal':
-            self.model = NormalAutoVCModel(params)
-        elif params.exp_name == 'autovc_attn' or params.exp_name == 'autovc_attention':
-            self.model = AttnAutoVCModel(params)
+        self.model = VQAutoVCModel(params)
 
         self.spec_augmenter = SpecAugmentation(
             time_drop_width=3,
@@ -39,20 +34,21 @@ class AutoVCModule(pl.LightningModule):
 
         m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
 
-        out_dec, out_psnt, c_real, c_recon = self.model(wav, m)
+        out_dec, out_psnt, c_real, c_recon, l_vq = self.model(wav, m)
 
         l_recon0 = F.mse_loss(out_dec, mel)
         l_recon = F.mse_loss(out_psnt, mel)
         l_cont = F.l1_loss(c_real, c_recon)
 
-        loss = l_recon + l_recon0 + l_cont
+        loss = l_recon + l_recon0 + l_cont + l_vq
 
         result = pl.TrainResult(loss)
         result.log_dict({
             'loss': loss,
             'l_recon': l_recon,
             'l_recon0': l_recon0,
-            'l_cont': l_cont
+            'l_cont': l_cont,
+            'l_vq': l_vq
         }, on_epoch=True)
 
         return result
@@ -60,20 +56,21 @@ class AutoVCModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         wav, mel = batch
 
-        out_dec, out_psnt, c_real, c_recon = self.model(wav, mel)
+        out_dec, out_psnt, c_real, c_recon, l_vq = self.model(wav, mel)
 
         l_recon0 = F.mse_loss(out_dec, mel)
         l_recon = F.mse_loss(out_psnt, mel)
         l_cont = F.l1_loss(c_real, c_recon)
 
-        loss = l_recon + l_recon0 + l_cont
+        loss = l_recon + l_recon0 + l_cont + l_vq
 
         result = pl.EvalResult(checkpoint_on=loss)
         result.log_dict({
             'val_loss': loss,
             'val_l_recon': l_recon,
             'val_l_recon0': l_recon0,
-            'val_l_cont': l_cont
+            'val_l_cont': l_cont,
+            'val_l_vq': l_vq
         }, prog_bar=True)
 
         return result

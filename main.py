@@ -31,6 +31,7 @@ if __name__ == '__main__':
     mc = ModelCheckpoint(
         filepath=save_fn,
         save_last=True,
+        monitor='val_loss',
         save_top_k=5
     )
 
