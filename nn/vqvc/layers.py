@@ -39,10 +39,11 @@ class GBlock(nn.Module):
         super().__init__()
 
         self.block = nn.Sequential(
-            nn.Conv1d(input_dim, middle_dim, 3, 1, 1),
+            nn.Conv1d(input_dim, middle_dim, 3, 1, 1, padding_mode='reflect'),
             nn.GroupNorm(num_groups, middle_dim),
             nn.ReLU(),
-            nn.Conv1d(middle_dim, output_dim, 3, 1, 1),
+            RCBlock(middle_dim, 3, dilation=1, num_groups=num_groups),
+            nn.Conv1d(middle_dim, output_dim, 3, 1, 1, padding_mode='reflect'),
         )
 
     def forward(self, x):
@@ -54,10 +55,19 @@ class RCBlock(nn.Module):
     def __init__(self, feat_dim, ks, dilation, num_groups):
         super().__init__()
         self.rec = nn.GRU(feat_dim, feat_dim // 2, num_layers=1, batch_first=True, bidirectional=True)
-        self.conv = nn.Conv1d(feat_dim, feat_dim, ks, 1, (ks-1)*dilation//2, dilation=dilation, groups=num_groups)
+        self.conv = nn.Conv1d(
+            in_channels=feat_dim,
+            out_channels=feat_dim,
+            kernel_size=ks,
+            stride=1,
+            padding=(ks-1)*dilation//2,
+            padding_mode='reflect',
+            dilation=dilation,
+            groups=num_groups
+        )
         self.gn = nn.GroupNorm(num_groups, feat_dim)
 
     def forward(self, x):
-        r, _ = self.rec(x.transpose(1, 2)).transpose(1, 2)
-        c = F.relu(self.gn(self.conv(r)))
+        r, _ = self.rec(x.transpose(1, 2))
+        c = F.relu(self.gn(self.conv(r.transpose(1, 2))))
         return x+c

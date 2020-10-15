@@ -2,6 +2,7 @@ import pathlib
 from argparse import ArgumentParser
 
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from dataset import VConDataModule
@@ -35,8 +36,14 @@ if __name__ == '__main__':
         save_top_k=5
     )
 
+    tb_logger = TensorBoardLogger(
+        save_dir=str(model_dir),
+        name='logs'
+    )
+
     trainer = pl.Trainer(
         gpus=1,
+        logger=tb_logger,
         checkpoint_callback=mc,
         max_epochs=config.n_epochs,
         gradient_clip_val=5.0,
