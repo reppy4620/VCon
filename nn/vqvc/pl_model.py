@@ -20,7 +20,7 @@ class VQVCModule(pl.LightningModule):
         self.model = VQVCModel(params)
 
         self.spec_augmenter = SpecAugmentation(
-            time_drop_width=3,
+            time_drop_width=6,
             time_stripes_num=2,
             freq_drop_width=3,
             freq_stripes_num=2
@@ -34,9 +34,9 @@ class VQVCModule(pl.LightningModule):
 
         m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
 
-        dec, enc, quant_diff = self.model(_, m)
+        dec, quant_diff = self.model(_, m)
 
-        l_recon = F.l1_loss(dec, mel)
+        l_recon = F.smooth_l1_loss(dec, mel)
 
         loss = l_recon + quant_diff
 

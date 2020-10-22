@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--tgt_path', type=str)
     parser.add_argument('--config_path', type=str)
     parser.add_argument('--ckpt_path', type=str)
-    parser.add_argument('--output_dir', type=str, default='./outputs/vqvc')
+    parser.add_argument('--output_dir', type=str, default='./outputs/autovc')
     args = parser.parse_args()
 
     params = get_config(args.config_path)

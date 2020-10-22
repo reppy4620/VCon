@@ -10,3 +10,9 @@ class ModelMixin(nn.Module):
     # for inference
     def inference(self, raw_src, raw_tgt, spec_src):
         raise NotImplementedError
+
+    @staticmethod
+    def freeze(model):
+        for p in model.parameters():
+            p.requires_grad = False
+        model.eval()

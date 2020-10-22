@@ -1,32 +1,80 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-from .layers import GBlock
+from .layers import (
+    EncoderLayer, DecoderLayer, Quantize, Insert
+)
+
+
+class Encoder(nn.Module):
+    def __init__(self, params):
+        super(Encoder, self).__init__()
+
+        k1 = [9, 7, 5]
+        k2 = [7, 5, 3]
+
+        self.layers = nn.ModuleList([
+            EncoderLayer(
+                params.model.in_channel // 2 ** i,
+                params.model.in_channel // 2 ** (i+1),
+                params.model.channel // 2 ** i,
+                k1[i],
+                k2[i]
+            ) for i in range(3)
+        ])
+        self.quantize = nn.ModuleList([
+            Quantize(
+                params.model.in_channel // 2 ** (i + 1),
+                params.model.n_embed // 2 ** i
+            ) for i in range(3)
+        ])
+        self.instance_norm = nn.ModuleList([
+            nn.InstanceNorm1d(
+                params.model.in_channel // 2 ** (i + 1)
+            ) for i in range(3)
+        ])
+
+    def forward(self, x):
+        q_afters = []
+        diff_total = 0
+
+        for i in range(len(self.layers)):
+            x = self.layers[i](x)
+            x_ = self.instance_norm[i](x)
+            q_after, diff = self.quantize[i](x_.transpose(1, 2))
+            q_after = q_after.transpose(1, 2)
+
+            q_afters.append(q_after)
+            diff_total += diff
+        return x, q_afters, diff_total
 
 
 class Decoder(nn.Module):
-    def __init__(self, in_channel, channel, num_groups=4):
+    def __init__(self, params):
         super().__init__()
 
-        blocks = [GBlock(in_channel // 2 ** i, in_channel // 2 ** i, channel, num_groups) for i in range(1, 4)]
-        blocks_refine = [GBlock(in_channel // 2 ** i, in_channel // 2 ** i, channel, num_groups) for i in range(1, 4)]
-        res_block = [GBlock(in_channel // 2 ** i, in_channel // 2 ** i, channel, num_groups) for i in range(1, 4)]
+        k1 = [8, 6, 4]
+        k2 = [7, 5, 3]
+
+        blocks = [
+            DecoderLayer(
+                params.model.in_channel // 2 ** (i+1),
+                params.model.in_channel // 2 ** i,
+                params.model.channel,
+                params.speaker_emb_dim,
+                k1[i],
+                k2[i]
+            ) for i in range(3)
+        ]
 
         self.blocks = nn.ModuleList(blocks[::-1])
-        self.blocks_refine = nn.ModuleList(blocks_refine[::-1])
-        self.res_block = nn.ModuleList(res_block[::-1])
 
-        self.scale_factors = [2, 2, 2]
+        self.insert = Insert()
 
-    def forward(self, q_after, sp_embed):
-        q_after = q_after[::-1]
-        sp_embed = sp_embed[::-1]
-        x = 0
+    def forward(self, x, q_afters, emb):
+        q_afters = q_afters[::-1]
 
         for i in range(len(self.blocks)):
-            x = x + self.res_block[i](q_after[i] + sp_embed[i])
-            x = F.interpolate(x, scale_factor=self.scale_factors[i], mode='nearest')
-            x = x + self.blocks[i](x)
-            x = torch.cat([x, x + self.blocks_refine[i](x)], dim=1)
+            x = self.insert(torch.cat([x, q_afters[i]], dim=1))
+            x = self.blocks(x, emb)
         return x
