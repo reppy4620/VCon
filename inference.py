@@ -36,19 +36,19 @@ if __name__ == '__main__':
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
+    print('Build model')
+    model = module_from_config(params)
+    model = model.load_from_checkpoint(args.ckpt_path)
+    model.freeze()
+
     print('Load wav')
     src_wav, src_mel = get_wav_mel(args.src_path)
     tgt_wav, _ = get_wav_mel(args.tgt_path)
 
     if 'autovc' in params.exp_name:
-        src_mel = _preprocess(src_mel, freq=params.model.freq)
+        src_mel = _preprocess(src_mel, freq=model.hparams.model.freq)
     elif 'vqvc' in params.exp_name:
         src_mel = _preprocess(src_mel, freq=4)
-
-    print('Build model')
-    model = module_from_config(params)
-    model = model.load_from_checkpoint(args.ckpt_path)
-    model.freeze()
 
     print('Inference')
     wav = model(src_wav, tgt_wav, src_mel)

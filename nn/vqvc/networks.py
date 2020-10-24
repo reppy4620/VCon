@@ -60,7 +60,7 @@ class Decoder(nn.Module):
             DecoderLayer(
                 params.model.in_channel // 2 ** (i+1),
                 params.model.in_channel // 2 ** i,
-                params.model.channel,
+                params.model.channel // 2 ** i,
                 params.speaker_emb_dim,
                 k1[i],
                 k2[i]
@@ -76,5 +76,6 @@ class Decoder(nn.Module):
 
         for i in range(len(self.blocks)):
             x = self.insert(torch.cat([x, q_afters[i]], dim=1))
-            x = self.blocks(x, emb)
+            x = self.blocks[i](x, emb)
+        x = torch.sigmoid(x)
         return x

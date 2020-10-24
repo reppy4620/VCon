@@ -23,8 +23,8 @@ if __name__ == '__main__':
     pl.seed_everything(config.seed)
 
     model = module_from_config(config)
-
     print(model)
+
     vcon_dm = VConDataModule(config)
 
     model_dir = pathlib.Path(config.model_dir)

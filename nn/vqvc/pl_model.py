@@ -52,9 +52,9 @@ class VQVCModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         _, mel = batch
 
-        dec, enc, quant_diff = self.model(_, mel)
+        dec, quant_diff = self.model(_, mel)
 
-        l_recon = F.l1_loss(dec, mel)
+        l_recon = F.smooth_l1_loss(dec, mel)
 
         loss = l_recon + quant_diff
 

@@ -51,6 +51,6 @@ class VQVCModel(ModelMixin):
         return wav
 
     def _make_speaker_vectors(self, raw, device):
-        c = [self.style_encoder.embed_utterance(x) for x in raw]
+        c = [self.speaker_encoder.embed_utterance(x) for x in raw]
         c = torch.tensor(c, dtype=torch.float, device=device)
         return c

@@ -20,6 +20,6 @@ optimizer:
 # model params
 model:
   in_channel: 80
-  channel: 512
+  channel: 256
   n_embed: 128
   num_groups: 4

@@ -21,4 +21,4 @@ optimizer:
 model:
   dim_neck: 32
   dim_pre: 512
-  freq: 8
+  freq: 16

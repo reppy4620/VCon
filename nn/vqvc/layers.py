@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 
-from .activation import TanhExp
-
 
 class EncoderLayer(nn.Module):
 
@@ -12,7 +10,7 @@ class EncoderLayer(nn.Module):
         self.extract_conv = nn.Sequential(
             nn.Conv1d(in_channel, middle_channel, k1, 1, k1//2),
             nn.BatchNorm1d(middle_channel),
-            TanhExp()
+            nn.ReLU()
         )
 
         self.rnn = RCBlock(middle_channel, k1, 1)
@@ -20,7 +18,7 @@ class EncoderLayer(nn.Module):
         self.down_conv = nn.Sequential(
             nn.Conv1d(middle_channel, out_channel, k2, 2, k2//2),
             nn.BatchNorm1d(out_channel),
-            TanhExp()
+            nn.ReLU()
         )
 
     def forward(self, x):
@@ -35,27 +33,27 @@ class DecoderLayer(nn.Module):
         super().__init__()
 
         self.adjust_conv = nn.Sequential(
-            nn.Conv1d(in_channel * 2, in_channel, k1-1, 1, (k1-1)//2),
-            nn.BatchNorm1d(in_channel),
-            TanhExp()
+            nn.Conv1d(in_channel * 2, in_channel, k1-1, 1, (k1-1)//2, groups=2),
+            nn.GroupNorm(2, in_channel),
+            nn.ReLU()
         )
 
         self.extract_conv = nn.Sequential(
             nn.Conv1d(in_channel + emb_channel, middle_channel, k1-1, 1, (k1-1)//2),
             nn.BatchNorm1d(middle_channel),
-            TanhExp()
+            nn.ReLU()
         )
 
         self.refine_conv1 = nn.Sequential(
             nn.Conv1d(middle_channel, middle_channel, k1-1, 1, (k1-1)//2),
             nn.BatchNorm1d(middle_channel),
-            TanhExp()
+            nn.ReLU()
         )
 
         self.up_conv = nn.Sequential(
-            nn.ConvTranspose1d(in_channel, middle_channel, k1, 2, k1//2 - 1),
+            nn.ConvTranspose1d(middle_channel, middle_channel, k1, 2, k1//2 - 1),
             nn.BatchNorm1d(middle_channel),
-            TanhExp()
+            nn.ReLU()
         )
 
         self.rnn = RCBlock(middle_channel, k1-1, 1)
@@ -63,7 +61,7 @@ class DecoderLayer(nn.Module):
         self.refine_conv2 = nn.Sequential(
             nn.Conv1d(middle_channel, out_channel, k2, 1, k2//2),
             nn.BatchNorm1d(out_channel),
-            TanhExp()
+            nn.ReLU()
         )
 
     def forward(self, x, emb):
@@ -112,7 +110,7 @@ class Quantize(nn.Module):
 class RCBlock(nn.Module):
     def __init__(self, feat_dim, ks, dilation):
         super().__init__()
-        self.rec = nn.LSTM(feat_dim, feat_dim // 2, num_layers=1, batch_first=True, bidirectional=True)
+        self.rec = nn.GRU(feat_dim, feat_dim // 2, num_layers=1, batch_first=True, bidirectional=True)
         self.conv = nn.Sequential(
             nn.Conv1d(
                 in_channels=feat_dim,
@@ -120,24 +118,25 @@ class RCBlock(nn.Module):
                 kernel_size=ks,
                 stride=1,
                 padding=(ks - 1) * dilation // 2,
-                dilation=dilation
+                dilation=dilation,
+                groups=2
             ),
-            nn.BatchNorm1d(feat_dim),
-            TanhExp()
+            nn.GroupNorm(2, feat_dim),
+            nn.ReLU()
         )
 
         self.insert = Insert()
 
     def forward(self, x):
         r, _ = self.rec(x.transpose(1, 2))
-        c = self.conv(self.insert(r.tranpose(1, 2)))
-        return x+c
+        r = r.transpose(1, 2)
+        c = self.conv(self.insert(r))
+        return r+c
 
 
 class Insert(nn.Module):
     def forward(self, x):
         B, C, L = x.size()
-        x = x.view(B, 2, C//2, L)
-        x = x.contiguous().transpose(1, 2)
+        x = x.view(B, 2, C//2, L).transpose(1, 2)
         x = x.contiguous().view(B, C, L)
         return x
