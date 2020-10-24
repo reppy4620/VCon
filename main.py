@@ -2,8 +2,8 @@ import pathlib
 from argparse import ArgumentParser
 
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from dataset import VConDataModule
 from utils import get_config, module_from_config
@@ -23,6 +23,8 @@ if __name__ == '__main__':
     pl.seed_everything(config.seed)
 
     model = module_from_config(config)
+    print(model)
+
     vcon_dm = VConDataModule(config)
 
     model_dir = pathlib.Path(config.model_dir)
@@ -43,8 +45,8 @@ if __name__ == '__main__':
 
     trainer = pl.Trainer(
         gpus=1,
-        logger=tb_logger,
         checkpoint_callback=mc,
+        logger=tb_logger,
         max_epochs=config.n_epochs,
         gradient_clip_val=5.0,
         deterministic=True

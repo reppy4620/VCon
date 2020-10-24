@@ -1,5 +1,4 @@
 import torch
-from resemblyzer import VoiceEncoder
 
 from nn.base import ModelMixin
 from utils import denormalize

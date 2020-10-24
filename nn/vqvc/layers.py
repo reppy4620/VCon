@@ -1,6 +1,79 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
+
+class EncoderLayer(nn.Module):
+
+    def __init__(self, in_channel, out_channel, middle_channel, k1, k2):
+        super().__init__()
+
+        self.extract_conv = nn.Sequential(
+            nn.Conv1d(in_channel, middle_channel, k1, 1, k1//2),
+            nn.BatchNorm1d(middle_channel),
+            nn.ReLU()
+        )
+
+        self.rnn = RCBlock(middle_channel, k1, 1)
+
+        self.down_conv = nn.Sequential(
+            nn.Conv1d(middle_channel, out_channel, k2, 2, k2//2),
+            nn.BatchNorm1d(out_channel),
+            nn.ReLU()
+        )
+
+    def forward(self, x):
+        x = self.extract_conv(x)
+        x = self.rnn(x)
+        x = self.down_conv(x)
+        return x
+
+
+class DecoderLayer(nn.Module):
+    def __init__(self, in_channel, out_channel, middle_channel, emb_channel, k1, k2):
+        super().__init__()
+
+        self.adjust_conv = nn.Sequential(
+            nn.Conv1d(in_channel * 2, in_channel, k1-1, 1, (k1-1)//2, groups=2),
+            nn.GroupNorm(2, in_channel),
+            nn.ReLU()
+        )
+
+        self.extract_conv = nn.Sequential(
+            nn.Conv1d(in_channel + emb_channel, middle_channel, k1-1, 1, (k1-1)//2),
+            nn.BatchNorm1d(middle_channel),
+            nn.ReLU()
+        )
+
+        self.refine_conv1 = nn.Sequential(
+            nn.Conv1d(middle_channel, middle_channel, k1-1, 1, (k1-1)//2),
+            nn.BatchNorm1d(middle_channel),
+            nn.ReLU()
+        )
+
+        self.up_conv = nn.Sequential(
+            nn.ConvTranspose1d(middle_channel, middle_channel, k1, 2, k1//2 - 1),
+            nn.BatchNorm1d(middle_channel),
+            nn.ReLU()
+        )
+
+        self.rnn = RCBlock(middle_channel, k1-1, 1)
+
+        self.refine_conv2 = nn.Sequential(
+            nn.Conv1d(middle_channel, out_channel, k2, 1, k2//2),
+            nn.BatchNorm1d(out_channel),
+            nn.ReLU()
+        )
+
+    def forward(self, x, emb):
+        # First, x is concatenated with q_after, so adjust channel dim.
+        x = self.adjust_conv(x)
+        emb = emb.unsqueeze(-1).expand(-1, -1, x.size(-1))
+        x = self.extract_conv(torch.cat([x, emb], dim=1))
+        x = x + self.refine_conv1(x)
+        x = self.up_conv(x)
+        x = self.rnn(x)
+        x = self.refine_conv2(x)
+        return x
 
 
 class Quantize(nn.Module):
@@ -34,40 +107,36 @@ class Quantize(nn.Module):
         return (quantize + quantize_1) / 2, diff
 
 
-class GBlock(nn.Module):
-    def __init__(self, input_dim, output_dim, middle_dim, num_groups):
-        super().__init__()
-
-        self.block = nn.Sequential(
-            nn.Conv1d(input_dim, middle_dim, 3, 1, 1, padding_mode='reflect'),
-            nn.GroupNorm(num_groups, middle_dim),
-            nn.ReLU(),
-            RCBlock(middle_dim, 3, dilation=1, num_groups=num_groups),
-            nn.Conv1d(middle_dim, output_dim, 3, 1, 1, padding_mode='reflect'),
-        )
-
-    def forward(self, x):
-        x = self.block(x)
-        return x
-
-
 class RCBlock(nn.Module):
-    def __init__(self, feat_dim, ks, dilation, num_groups):
+    def __init__(self, feat_dim, ks, dilation):
         super().__init__()
         self.rec = nn.GRU(feat_dim, feat_dim // 2, num_layers=1, batch_first=True, bidirectional=True)
-        self.conv = nn.Conv1d(
-            in_channels=feat_dim,
-            out_channels=feat_dim,
-            kernel_size=ks,
-            stride=1,
-            padding=(ks-1)*dilation//2,
-            padding_mode='reflect',
-            dilation=dilation,
-            groups=num_groups
+        self.conv = nn.Sequential(
+            nn.Conv1d(
+                in_channels=feat_dim,
+                out_channels=feat_dim,
+                kernel_size=ks,
+                stride=1,
+                padding=(ks - 1) * dilation // 2,
+                dilation=dilation,
+                groups=2
+            ),
+            nn.GroupNorm(2, feat_dim),
+            nn.ReLU()
         )
-        self.gn = nn.GroupNorm(num_groups, feat_dim)
+
+        self.insert = Insert()
 
     def forward(self, x):
         r, _ = self.rec(x.transpose(1, 2))
-        c = F.relu(self.gn(self.conv(r.transpose(1, 2))))
-        return x+c
+        r = r.transpose(1, 2)
+        c = self.conv(self.insert(r))
+        return r+c
+
+
+class Insert(nn.Module):
+    def forward(self, x):
+        B, C, L = x.size()
+        x = x.view(B, 2, C//2, L).transpose(1, 2)
+        x = x.contiguous().view(B, C, L)
+        return x

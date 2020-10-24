@@ -31,11 +31,13 @@ def get_wav_mel(fn, to_mel=None):
 
 
 def normalize(x):
-    return (20 * x + 100) / 100
+    # return (20 * x + 100) / 100
+    return ((20 * x + 100) - 20) / 100
 
 
 def denormalize(y):
-    return (100 * y - 100) / 20
+    # return (100 * y - 100) / 20
+    return (100 * y + 20 - 100) / 20
 
 
 # save sample

@@ -6,6 +6,8 @@ n_epochs: 500
 
 train_ratio: 0.98
 
+# resemblyzer.VoiceEncoder encodes wav to 256-dim vector
+speaker_emb_dim: 256
 # mel-spectrogram bin size
 mel_size: 80
 # sampling rate
@@ -18,6 +20,6 @@ optimizer:
 # model params
 model:
   in_channel: 80
-  channel: 512
+  channel: 256
   n_embed: 128
   num_groups: 4

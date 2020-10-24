@@ -2,7 +2,7 @@
 exp_name: autovc
 seed: 42
 batch_size: 512
-n_epochs: 200
+n_epochs: 500
 
 train_ratio: 0.98
 
