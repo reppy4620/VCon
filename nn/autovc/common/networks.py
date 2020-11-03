@@ -74,7 +74,7 @@ class AttnEncoder(nn.Module):
                     dilation=1,
                     w_init_gain='relu'
                 ),
-                nn.BatchNorm1d(512, affine=True)
+                nn.BatchNorm1d(512, affine=True),
             ) for i in range(3)
         ])
 
@@ -200,26 +200,31 @@ class Postnet(nn.Module):
                     dilation=1,
                     w_init_gain='tanh'
                 ),
-                nn.BatchNorm1d(512, affine=True)
+                nn.BatchNorm1d(512, affine=True),
+                nn.Tanh(),
+                nn.Dropout(0.5)
             ) for i in range(5-1)
         ])
 
         # paper indicates that bn and act is not applied after last convolution
         self.convolutions.append(
-            ConvNorm(
-                in_channels=512,
-                out_channels=80,
-                kernel_size=5,
-                stride=1,
-                padding=2,
-                dilation=1,
-                w_init_gain='linear'
+            nn.Sequential(
+                ConvNorm(
+                    in_channels=512,
+                    out_channels=80,
+                    kernel_size=5,
+                    stride=1,
+                    padding=2,
+                    dilation=1,
+                    w_init_gain='linear'
+                ),
+                nn.BatchNorm1d(80, affine=True)
             )
         )
 
     def forward(self, x):
         for i in range(len(self.convolutions) - 1):
-            x = torch.tanh(self.convolutions[i](x))
+            x = self.convolutions[i](x)
 
         x = self.convolutions[-1](x)
 

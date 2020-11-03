@@ -1,7 +1,7 @@
 import librosa
 import torch
 
-from resemblyzer import trim_long_silences
+from resemblyzer import *
 from scipy.io.wavfile import write
 
 
@@ -31,13 +31,11 @@ def get_wav_mel(fn, to_mel=None):
 
 
 def normalize(x):
-    # return (20 * x + 100) / 100
-    return ((20 * x + 100) - 20) / 100
+    return (torch.clamp(x, min=-5, max=1) + 2.5) / 2.5
 
 
 def denormalize(y):
-    # return (100 * y - 100) / 20
-    return (100 * y + 20 - 100) / 20
+    return 2.5 * y - 2.5
 
 
 # save sample

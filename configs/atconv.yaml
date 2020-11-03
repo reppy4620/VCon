@@ -21,4 +21,3 @@ optimizer:
 model:
   in_channel: 80
   channel: 512
-  n_embed: 128

@@ -30,11 +30,11 @@ class VQVCModule(pl.LightningModule):
         return self.model.inference(raw_src, raw_tgt, spec_src)
 
     def training_step(self, batch, batch_idx):
-        _, mel = batch
+        wav, mel = batch
 
         m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
 
-        dec, quant_diff = self.model(_, m)
+        dec, quant_diff = self.model(wav, m)
 
         l_recon = F.smooth_l1_loss(dec, mel)
 
@@ -50,9 +50,9 @@ class VQVCModule(pl.LightningModule):
         return result
 
     def validation_step(self, batch, batch_idx):
-        _, mel = batch
+        wav, mel = batch
 
-        dec, quant_diff = self.model(_, mel)
+        dec, quant_diff = self.model(wav, mel)
 
         l_recon = F.smooth_l1_loss(dec, mel)
 

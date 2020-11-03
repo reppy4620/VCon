@@ -15,8 +15,8 @@ class Encoder(nn.Module):
 
         self.layers = nn.ModuleList([
             EncoderLayer(
-                params.model.in_channel // 2 ** i,
-                params.model.in_channel // 2 ** (i+1),
+                params.model.in_channel if i == 0 else params.model.channel // 2 ** i,
+                params.model.channel // 2 ** (i+1),
                 params.model.channel // 2 ** i,
                 k1[i],
                 k2[i]
@@ -24,13 +24,13 @@ class Encoder(nn.Module):
         ])
         self.quantize = nn.ModuleList([
             Quantize(
-                params.model.in_channel // 2 ** (i + 1),
+                params.model.channel // 2 ** (i+1),
                 params.model.n_embed // 2 ** i
             ) for i in range(3)
         ])
         self.instance_norm = nn.ModuleList([
             nn.InstanceNorm1d(
-                params.model.in_channel // 2 ** (i + 1)
+                params.model.channel // 2 ** (i+1)
             ) for i in range(3)
         ])
 
@@ -46,7 +46,7 @@ class Encoder(nn.Module):
 
             q_afters.append(q_after)
             diff_total += diff
-        return x, q_afters, diff_total
+        return q_afters, diff_total
 
 
 class Decoder(nn.Module):
@@ -58,8 +58,8 @@ class Decoder(nn.Module):
 
         blocks = [
             DecoderLayer(
-                params.model.in_channel // 2 ** (i+1),
-                params.model.in_channel // 2 ** i,
+                params.model.channel // 2 ** (i+1),
+                params.model.in_channel if i == 0 else params.model.channel // 2 ** i,
                 params.model.channel // 2 ** i,
                 params.speaker_emb_dim,
                 k1[i],
@@ -69,13 +69,33 @@ class Decoder(nn.Module):
 
         self.blocks = nn.ModuleList(blocks[::-1])
 
-        self.insert = Insert()
+        self.post_net = nn.Sequential(
+            nn.Conv1d(80, 512, kernel_size=5, padding=2),
+            nn.BatchNorm1d(512),
+            nn.Tanh(),
+            nn.Dropout(0.5),
+            nn.Conv1d(512, 512, kernel_size=5, padding=2),
+            nn.BatchNorm1d(512),
+            nn.Tanh(),
+            nn.Dropout(0.5),
+            nn.Conv1d(512, 512, kernel_size=5, padding=2),
+            nn.BatchNorm1d(512),
+            nn.Tanh(),
+            nn.Dropout(0.5),
+            nn.Conv1d(512, 512, kernel_size=5, padding=2),
+            nn.BatchNorm1d(512),
+            nn.Tanh(),
+            nn.Dropout(0.5),
+            nn.Conv1d(512, 80, kernel_size=5, padding=2),
+            nn.BatchNorm1d(80),
+            nn.Dropout(0.5),
+        )
 
-    def forward(self, x, q_afters, emb):
+    def forward(self, q_afters, emb):
         q_afters = q_afters[::-1]
+        x = 0
 
         for i in range(len(self.blocks)):
-            x = self.insert(torch.cat([x, q_afters[i]], dim=1))
-            x = self.blocks[i](x, emb)
-        x = torch.sigmoid(x)
+            x = self.blocks[i](x+q_afters[i], emb)
+        x = x + self.post_net(x)
         return x

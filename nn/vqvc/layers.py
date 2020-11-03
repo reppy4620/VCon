@@ -33,19 +33,13 @@ class DecoderLayer(nn.Module):
         super().__init__()
 
         self.adjust_conv = nn.Sequential(
-            nn.Conv1d(in_channel * 2, in_channel, k1-1, 1, (k1-1)//2, groups=2),
-            nn.GroupNorm(2, in_channel),
-            nn.ReLU()
-        )
-
-        self.extract_conv = nn.Sequential(
-            nn.Conv1d(in_channel + emb_channel, middle_channel, k1-1, 1, (k1-1)//2),
+            nn.Conv1d(in_channel, middle_channel, k1-1, 1, (k1-1)//2),
             nn.BatchNorm1d(middle_channel),
             nn.ReLU()
         )
 
-        self.refine_conv1 = nn.Sequential(
-            nn.Conv1d(middle_channel, middle_channel, k1-1, 1, (k1-1)//2),
+        self.extract_conv = nn.Sequential(
+            nn.Conv1d(middle_channel + emb_channel, middle_channel, k1-1, 1, (k1-1)//2),
             nn.BatchNorm1d(middle_channel),
             nn.ReLU()
         )
@@ -58,7 +52,7 @@ class DecoderLayer(nn.Module):
 
         self.rnn = RCBlock(middle_channel, k1-1, 1)
 
-        self.refine_conv2 = nn.Sequential(
+        self.refine_conv = nn.Sequential(
             nn.Conv1d(middle_channel, out_channel, k2, 1, k2//2),
             nn.BatchNorm1d(out_channel),
             nn.ReLU()
@@ -69,10 +63,9 @@ class DecoderLayer(nn.Module):
         x = self.adjust_conv(x)
         emb = emb.unsqueeze(-1).expand(-1, -1, x.size(-1))
         x = self.extract_conv(torch.cat([x, emb], dim=1))
-        x = x + self.refine_conv1(x)
         x = self.up_conv(x)
         x = self.rnn(x)
-        x = self.refine_conv2(x)
+        x = self.refine_conv(x)
         return x
 
 
@@ -131,7 +124,7 @@ class RCBlock(nn.Module):
         r, _ = self.rec(x.transpose(1, 2))
         r = r.transpose(1, 2)
         c = self.conv(self.insert(r))
-        return r+c
+        return x+c
 
 
 class Insert(nn.Module):

@@ -22,8 +22,8 @@ class VQVCModel(ModelMixin):
 
     def forward(self, raw, spec):
         emb = self._make_speaker_vectors(raw, spec.device)
-        enc, q_afters, diff = self.encoder(spec)
-        dec = self.decoder(enc, q_afters, emb)
+        q_afters, diff = self.encoder(spec)
+        dec = self.decoder(q_afters, emb)
         return dec, diff
 
     def inference(self, raw_src, raw_tgt, spec_src):
@@ -37,10 +37,10 @@ class VQVCModel(ModelMixin):
         elif len(spec_src.size()) != 3:
             raise ValueError("len(spec_src.size()) must be 2 or 3")
 
-        emb = self.speaker_encoder.embed_utterance(raw_tgt)
+        emb = self._make_speaker_vectors([raw_tgt], spec_src.device)
 
-        enc, q_afters, _ = self.encoder(spec_src)
-        dec = self.decoder(enc, q_afters, emb)
+        q_afters, _ = self.encoder(spec_src)
+        dec = self.decoder(q_afters, emb)
 
         wav = self._mel_to_wav(dec)
         return wav

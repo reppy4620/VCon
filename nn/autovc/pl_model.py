@@ -38,9 +38,9 @@ class AutoVCModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         wav, mel = batch
 
-        m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
+        # m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
 
-        out_dec, out_psnt, c_real, c_recon = self.model(wav, m)
+        out_dec, out_psnt, c_real, c_recon = self.model(wav, mel)
 
         l_recon0 = F.mse_loss(out_dec, mel)
         l_recon = F.mse_loss(out_psnt, mel)
