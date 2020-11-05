@@ -13,7 +13,6 @@ AutoVC model only can do voice conversion in my experiment.
 - tqdm
 - pytorch
 - pytorch-lightning
-- joblib
 
 This project depends on those packages.  
 If occur error because of missing package, please install that package.

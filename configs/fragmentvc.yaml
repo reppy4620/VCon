@@ -1,0 +1,26 @@
+# experiment params
+exp_name: fragmentvc
+seed: 42
+batch_size: 512
+n_epochs: 4000
+
+train_ratio: 0.98
+
+# mel-spectrogram bin size
+mel_size: 80
+# sampling rate
+sampling_rate: 22050
+
+# optimizer params
+optimizer:
+  lr: 0.0005
+
+# model params
+model:
+  in_channel: 80
+  channel: 512
+  n_conv: 3
+  n_st_attn: 3
+  n_self_attn: 5
+  n_head: 8
+  dropout: 0.1

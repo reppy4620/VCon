@@ -6,6 +6,10 @@ from .vqvc import VQVCModel
 from .vqvc import VQVCModule
 from .vqvc import VQVCDataModule
 
-from .tfm import TransformerModel
-from .tfm import TransformerModule
-from .tfm import TransformerDataModule
+from .fragmentvc import FragmentVCModel
+from .fragmentvc import FragmentVCModule
+from .fragmentvc import FragmentVCDataModule
+
+from .transformer import TransformerModel
+from .transformer import TransformerModule
+from .transformer import TransformerDataModule

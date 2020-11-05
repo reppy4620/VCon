@@ -1,7 +1,7 @@
 # experiment params
-exp_name: tfm
+exp_name: transformer
 seed: 42
-batch_size: 512
+batch_size: 64
 n_epochs: 4000
 
 train_ratio: 0.98
@@ -19,8 +19,6 @@ optimizer:
 model:
   in_channel: 80
   channel: 512
-  n_conv: 3
-  n_st_attn: 3
-  n_self_attn: 5
+  n_layers: 6
   n_head: 8
   dropout: 0.1

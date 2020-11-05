@@ -4,19 +4,22 @@ from modules import *
 _model_dict = {
     'autovc': AutoVCModel,
     'vqvc': VQVCModel,
-    'tfm': TransformerModel
+    'fragmentvc': FragmentVCModel,
+    'transformer': TransformerModel
 }
 
 _module_dict = {
     'autovc': AutoVCModule,
     'vqvc': VQVCModule,
-    'tfm': TransformerModule
+    'fragmentvc': FragmentVCModule,
+    'transformer': TransformerModule
 }
 
 _data_module_dict = {
     'autovc': AutoVCDataModule,
     'vqvc': VQVCDataModule,
-    'tfm': TransformerDataModule
+    'fragmentvc': FragmentVCDataModule,
+    'transformer': TransformerDataModule
 }
 
 

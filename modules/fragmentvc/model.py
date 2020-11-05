@@ -9,7 +9,7 @@ from .layers import (
 from ..base import ModelMixin
 
 
-class TransformerModel(ModelMixin):
+class FragmentVCModel(ModelMixin):
     def __init__(self, params: AttributeDict):
         super().__init__()
 
@@ -84,6 +84,6 @@ class TransformerModel(ModelMixin):
         return mel_src, mel_tgt
 
     def _preprocess_mel(self, mel):
-        mel = normalize(mel)
+        # mel = normalize(mel)
         mel = self.unsqueeze_for_input(mel)
         return mel

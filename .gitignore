@@ -156,7 +156,6 @@ ipython_config.py
 .idea
 .vscode
 ./notebooks/.ipynb_checkpoints
-data
 test
 outputs
 lightning_logs
