@@ -18,7 +18,7 @@ def _preprocess(x):
     # maybe, np.random.randint is faster than pure python's random.randint
     sig_offset = np.random.randint(0, max_offset+1)
     x = x[:, sig_offset:sig_offset+_seq_len]
-    x = normalize(x)
+    # x = normalize(x)
     return x.float()
 
 

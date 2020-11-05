@@ -24,7 +24,7 @@ def process_dir(data_dir, output_dir):
 def preprocess(dataset_dir: Path, output_dir: Path):
 
     if not output_dir.exists():
-        output_dir.mkdir()
+        output_dir.mkdir(parents=True)
 
     fns = list(dataset_dir.glob('jvs*'))
     Parallel(n_jobs=-1)(delayed(process_dir)(d, output_dir) for d in tqdm(fns, total=len(fns)))

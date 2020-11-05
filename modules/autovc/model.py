@@ -62,14 +62,9 @@ class AutoVCModel(ModelMixin):
         c = c[:, :, None].expand(-1, -1, time_size)
         return c
 
-    def _mel_to_wav(self, mel):
-        mel = denormalize(mel)
-        wav = self.vocoder.inverse(mel).squeeze(0).detach().cpu().numpy()
-        return wav
-
     def _preprocess(self, src_path: str, tgt_path: str):
-        wav_src, mel_src = get_wav_mel(src_path, to_mel=self.vocoder)
-        wav_tgt, _ = get_wav_mel(tgt_path, to_mel=self.vocoder)
+        wav_src, mel_src = get_wav_mel(src_path)
+        wav_tgt, _ = get_wav_mel(tgt_path)
         mel_src = self._preprocess_mel(mel_src)
         return wav_src, wav_tgt, mel_src
 

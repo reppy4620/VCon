@@ -39,19 +39,14 @@ class VQVCModel(ModelMixin):
         wav = self._mel_to_wav(dec)
         return wav
 
-    def _mel_to_wav(self, mel):
-        mel = denormalize(mel)
-        wav = self.vocoder.inverse(mel).squeeze(0).detach().cpu().numpy()
-        return wav
-
     def _make_speaker_vectors(self, wavs, device):
         c = [self.speaker_encoder.embed_utterance(x) for x in wavs]
         c = torch.tensor(c, dtype=torch.float, device=device)
         return c
 
     def _preprocess(self, src_path: str, tgt_path: str):
-        wav_src, mel_src = get_wav_mel(src_path, to_mel=self.vocoder)
-        wav_tgt, _ = get_wav_mel(tgt_path, to_mel=self.vocoder)
+        wav_src, mel_src = get_wav_mel(src_path)
+        wav_tgt, _ = get_wav_mel(tgt_path)
         return wav_src, wav_tgt, mel_src
 
     def _preprocess_mel(self, mel):
