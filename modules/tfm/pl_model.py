@@ -51,7 +51,7 @@ class TransformerModule(pl.LightningModule):
 
         loss = F.smooth_l1_loss(out, src)
 
-        self.log('loss', loss, prog_bar=True)
+        self.log('val_loss', loss, prog_bar=True)
 
     def configure_optimizers(self):
         return AdaBelief(self.model.parameters(), self.hparams.optimizer.lr)

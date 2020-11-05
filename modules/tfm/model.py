@@ -42,6 +42,8 @@ class TransformerModel(ModelMixin):
             SelfAttention(params) for _ in range(params.model.n_self_attn)
         ])
 
+        self.linear = nn.Linear(channel, 80)
+
         self.post_net = nn.Sequential(
             nn.Conv1d(params.mel_size, channel, kernel_size=5, padding=2),
             nn.BatchNorm1d(channel),
@@ -67,11 +69,12 @@ class TransformerModel(ModelMixin):
         self.n_st_attn = params.model.n_st_attn
 
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
-        src, tgt = self.source_extractor(src), self.target_extractor(tgt)
+        src, tgt = self.source_extractor(src).permute(2, 0, 1), self.target_extractor(tgt).permute(2, 0, 1)
 
         for i in range(self.n_st_attn):
-            tgt = self.conv_layers[i](tgt)
+            tgt = self.conv_layers[i](tgt.permute(1, 2, 0)).permute(2, 0, 1)
             src = self.st_attn_layers[i](tgt, src)
+        src = self.linear(src.permute(1, 0, 2)).transpose(1, 2)
         src = src + self.post_net(src)
         return src
 

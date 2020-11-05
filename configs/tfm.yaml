@@ -1,8 +1,8 @@
 # experiment params
 exp_name: tfm
 seed: 42
-batch_size: 256
-n_epochs: 500
+batch_size: 512
+n_epochs: 1000
 
 train_ratio: 0.98
 

@@ -20,16 +20,16 @@ class ConvExtractor(nn.Module):
         self.conv_layers = nn.ModuleList([
             nn.Sequential(
                 Conv1d(params.mel_size, channel, 9),
-                nn.LayerNorm(channel),
+                nn.BatchNorm1d(channel),
                 nn.GELU()
             )
         ])
 
-        for i in range(params.n_conv-1):
+        for i in range(params.model.n_conv-1):
             self.conv_layers.append(
                 nn.Sequential(
                     Conv1d(channel, channel, 5),
-                    nn.LayerNorm(channel),
+                    nn.BatchNorm1d(channel),
                     nn.GELU()
                 )
             )

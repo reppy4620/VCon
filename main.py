@@ -1,14 +1,15 @@
 import pathlib
+import warnings
 from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
-from dataset import VConDataModule
 from utils import get_config, module_from_config, datamodule_from_config
 
 if __name__ == '__main__':
+    warnings.simplefilter('ignore')
 
     parser = ArgumentParser()
     parser.add_argument('-c', '--config_path', type=str)
