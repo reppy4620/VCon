@@ -1,10 +1,3 @@
-#####################################################
-# Lazy implementation
-# I have to implement preprocess method in one file
-# Because this file has duplicate lines
-####################################################
-
-
 import argparse
 import torch
 
@@ -33,7 +26,7 @@ def preprocess(dataset_dir: Path, output_dir: Path):
     if not output_dir.exists():
         output_dir.mkdir()
 
-    fns = list(dataset_dir.glob('*'))
+    fns = list(dataset_dir.glob('jvs*'))
     Parallel(n_jobs=-1)(delayed(process_dir)(d, output_dir) for d in tqdm(fns, total=len(fns)))
 
 

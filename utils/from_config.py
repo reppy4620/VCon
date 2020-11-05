@@ -1,28 +1,22 @@
-from nn import *
+from modules import *
 
 
 _model_dict = {
-    'autovc': NormalAutoVCModel,
-    'autovc_normal': NormalAutoVCModel,
-    'autovc_attn': AttnAutoVCModel,
-    'autovc_attention': AttnAutoVCModel,
-    'autovc_vq': VQAutoVCModel,
-    'quartz': QuartzModel,
-    'adain': AdaINVCModel,
-    'adain_gan': AdaINVCModel,
-    'vqvc': VQVCModel
+    'autovc': AutoVCModel,
+    'vqvc': VQVCModel,
+    'tfm': TransformerModel
 }
 
 _module_dict = {
     'autovc': AutoVCModule,
-    'autovc_normal': AutoVCModule,
-    'autovc_attn': AutoVCModule,
-    'autovc_attention': AutoVCModule,
-    'autovc_vq': VQAutoVCModule,
-    'quartz': QuartzModule,
-    'adain': AdaINVCModule,
-    'adain_gan': AdaINGANModule,
-    'vqvc': VQVCModule
+    'vqvc': VQVCModule,
+    'tfm': TransformerModule
+}
+
+_data_module_dict = {
+    'autovc': AutoVCDataModule,
+    'vqvc': VQVCDataModule,
+    'tfm': TransformerDataModule
 }
 
 
@@ -32,3 +26,7 @@ def model_from_config(params):
 
 def module_from_config(params):
     return _module_dict[params.exp_name](params)
+
+
+def datamodule_from_config(params):
+    return _data_module_dict[params.exp_name](params)

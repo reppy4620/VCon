@@ -6,7 +6,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
 from dataset import VConDataModule
-from utils import get_config, module_from_config
+from utils import get_config, module_from_config, datamodule_from_config
 
 if __name__ == '__main__':
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     model = module_from_config(config)
     print(model)
 
-    vcon_dm = VConDataModule(config)
+    vcon_dm = datamodule_from_config(config)
 
     model_dir = pathlib.Path(config.model_dir)
     if not model_dir.exists():

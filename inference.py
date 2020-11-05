@@ -1,23 +1,7 @@
 import argparse
 import pathlib
 
-import torch.nn.functional as F
-
-from utils import get_config, get_wav_mel, save_sample, module_from_config, normalize
-
-
-# for AutoVC model
-def _preprocess(mel, freq=32):
-    t_dim = mel.size(-1)
-    mod_val = t_dim % freq
-    if mod_val != 0:
-        if mod_val < t_dim / 2:
-            mel = mel[:, :t_dim-mod_val]
-        else:
-            pad_length = t_dim + freq - mod_val
-            mel = F.pad(mel[None, :, :], [0, pad_length], value=-5).squeeze(0)
-    mel = normalize(mel)
-    return mel
+from utils import get_config, get_wav, save_sample, module_from_config
 
 
 if __name__ == '__main__':
@@ -41,19 +25,11 @@ if __name__ == '__main__':
     model = model.load_from_checkpoint(args.ckpt_path)
     model.freeze()
 
-    print('Load wav')
-    src_wav, src_mel = get_wav_mel(args.src_path)
-    tgt_wav, _ = get_wav_mel(args.tgt_path)
-
-    if 'autovc' in params.exp_name:
-        src_mel = _preprocess(src_mel, freq=model.hparams.model.freq)
-    elif 'vqvc' in params.exp_name:
-        src_mel = _preprocess(src_mel, freq=4)
-
     print('Inference')
-    wav = model(src_wav, tgt_wav, src_mel)
+    wav = model(args.src_path, args.tgt_path)
 
     print('Saving')
+    src_wav, tgt_wav = get_wav(args.src_path), get_wav(args.tgt_path)
     save_sample(str(output_dir / 'src.wav'), src_wav)
     save_sample(str(output_dir / 'tgt.wav'), tgt_wav)
     save_sample(str(output_dir / 'gen.wav'), wav)

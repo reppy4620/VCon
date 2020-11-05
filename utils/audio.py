@@ -9,10 +9,6 @@ from scipy.io.wavfile import write
 def get_wav(fn):
     wav, sr = librosa.load(fn)
     trimmed = trim_long_silences(wav)
-    try:
-        wav = 0.95 * librosa.util.normalize(trimmed)
-    except:
-        wav = 0.95 * librosa.util.normalize(wav)
     return wav
 
 
