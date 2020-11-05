@@ -26,17 +26,9 @@ class TransformerModel(ModelMixin):
             ) for _ in range(params.model.n_st_attn)
         ])
 
-        self.conv1 = Conv1d(channel, channel, 3)
-        self.conv2 = Conv1d(channel, channel, 3)
-        self.conv3 = Conv1d(channel, channel, 3)
-
         self.st_attn_layers = nn.ModuleList([
             SourceTargetAttention(params) for _ in range(params.model.n_st_attn)
         ])
-
-        self.st_attn1 = SourceTargetAttention(params)
-        self.st_attn2 = SourceTargetAttention(params)
-        self.st_attn3 = SourceTargetAttention(params)
 
         self.smoothers = nn.Sequential(*[
             SelfAttention(params) for _ in range(params.model.n_self_attn)
@@ -45,23 +37,23 @@ class TransformerModel(ModelMixin):
         self.linear = nn.Linear(channel, 80)
 
         self.post_net = nn.Sequential(
-            nn.Conv1d(params.mel_size, channel, kernel_size=5, padding=2),
+            Conv1d(params.mel_size, channel, 5),
             nn.BatchNorm1d(channel),
             nn.Tanh(),
             nn.Dropout(0.5),
-            nn.Conv1d(channel, channel, kernel_size=5, padding=2),
+            Conv1d(channel, channel, 5),
             nn.BatchNorm1d(channel),
             nn.Tanh(),
             nn.Dropout(0.5),
-            nn.Conv1d(channel, channel, kernel_size=5, padding=2),
+            Conv1d(channel, channel, 5),
             nn.BatchNorm1d(channel),
             nn.Tanh(),
             nn.Dropout(0.5),
-            nn.Conv1d(channel, channel, kernel_size=5, padding=2),
+            Conv1d(channel, channel, 5),
             nn.BatchNorm1d(channel),
             nn.Tanh(),
             nn.Dropout(0.5),
-            nn.Conv1d(channel, params.mel_size, kernel_size=5, padding=2),
+            Conv1d(channel, params.mel_size, 5),
             nn.BatchNorm1d(80),
             nn.Dropout(0.5),
         )

@@ -33,11 +33,11 @@ class VQVCModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         wavs, mels = batch
 
-        m = self.spec_augmenter(mels.unsqueeze(1)).squeeze(1)
+        m = self.spec_augmenter(mels)
 
         dec, quant_diff = self.model(wavs, m)
 
-        l_recon = F.smooth_l1_loss(dec, mels)
+        l_recon = F.l1_loss(dec, mels)
 
         loss = l_recon + quant_diff
         self.log_dict({
@@ -53,7 +53,7 @@ class VQVCModule(pl.LightningModule):
 
         dec, quant_diff = self.model(wavs, mels)
 
-        l_recon = F.smooth_l1_loss(dec, mels)
+        l_recon = F.l1_loss(dec, mels)
 
         loss = l_recon + quant_diff
         self.log_dict({
@@ -63,4 +63,13 @@ class VQVCModule(pl.LightningModule):
         }, prog_bar=True)
 
     def configure_optimizers(self):
-        return AdaBelief(self.model.parameters(), self.hparams.optimizer.lr)
+        return AdaBelief(
+            params=self.model.parameters(),
+            lr=self.hparams.optimizer.lr,
+            eps=1e-12,
+            weight_decay=1.2e-6,
+            weight_decouple=False,
+            rectify=False,
+            fixed_decay=False,
+            amsgrad=False
+        )

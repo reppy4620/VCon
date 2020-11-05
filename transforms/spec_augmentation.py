@@ -57,7 +57,9 @@ class SpecAugmentation(nn.Module):
         self.freq_dropper = DropStripes(dim=3, drop_width=freq_drop_width,
                                         stripes_num=freq_stripes_num)
 
-    def forward(self, input):
-        x = self.time_dropper(input)
+    def forward(self, x):
+        x = x.unsqueeze(1)
+        x = self.time_dropper(x)
         x = self.freq_dropper(x)
+        x = x.squeeze(1)
         return x

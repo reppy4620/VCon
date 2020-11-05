@@ -2,7 +2,7 @@
 exp_name: tfm
 seed: 42
 batch_size: 512
-n_epochs: 1000
+n_epochs: 4000
 
 train_ratio: 0.98
 
@@ -13,7 +13,7 @@ sampling_rate: 22050
 
 # optimizer params
 optimizer:
-  lr: 0.001
+  lr: 0.0005
 
 # model params
 model:
@@ -21,6 +21,6 @@ model:
   channel: 512
   n_conv: 3
   n_st_attn: 3
-  n_self_attn: 3
+  n_self_attn: 5
   n_head: 8
   dropout: 0.1

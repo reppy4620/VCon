@@ -33,9 +33,9 @@ class AutoVCModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         wav, mel = batch
 
-        # m = self.spec_augmenter(mel.unsqueeze(1)).squeeze(1)
+        m = self.spec_augmenter(mel)
 
-        out_dec, out_psnt, c_real, c_recon = self.model(wav, mel)
+        out_dec, out_psnt, c_real, c_recon = self.model(wav, m)
 
         l_recon0 = F.mse_loss(out_dec, mel)
         l_recon = F.mse_loss(out_psnt, mel)
@@ -69,4 +69,13 @@ class AutoVCModule(pl.LightningModule):
         }, prog_bar=True)
 
     def configure_optimizers(self):
-        return AdaBelief(self.model.parameters(), self.hparams.optimizer.lr)
+        return AdaBelief(
+            params=self.model.parameters(),
+            lr=self.hparams.optimizer.lr,
+            eps=1e-12,
+            weight_decay=1.2e-6,
+            weight_decouple=False,
+            rectify=False,
+            fixed_decay=False,
+            amsgrad=False
+        )

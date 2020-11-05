@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     trainer = pl.Trainer(
         gpus=1,
-        checkpoint_callback=mc,
+        callbacks=[mc],
         logger=tb_logger,
         max_epochs=config.n_epochs,
         gradient_clip_val=5.0,
