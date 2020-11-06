@@ -5,6 +5,7 @@ batch_size: 512
 n_epochs: 200
 
 train_ratio: 0.98
+from_fn: false
 
 # resemblyzer.VoiceEncoder encodes wav to 256-dim vector
 speaker_emb_dim: 256
@@ -12,6 +13,8 @@ speaker_emb_dim: 256
 mel_size: 80
 # sampling rate
 sampling_rate: 22050
+# seq_len of spectrum during training
+seq_len: 128
 
 # optimizer params
 optimizer:

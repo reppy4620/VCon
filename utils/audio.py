@@ -1,7 +1,7 @@
 import librosa
 import torch
+import pyworld as pw
 
-from resemblyzer import *
 from scipy.io.wavfile import write
 from transforms import Wav2Mel
 
@@ -20,6 +20,12 @@ def get_wav_mel(fn, to_mel=None):
     wav = get_wav(fn)
     mel = to_mel(torch.tensor(wav, dtype=torch.float)).squeeze(0)
     return wav, mel.cpu()
+
+
+def get_world_feature(fn, sr=22050):
+    wav = get_wav(fn)
+    f0, sp, ap = pw.wav2world(wav, sr)
+    return f0, sp.T, ap.T
 
 
 def normalize(x):

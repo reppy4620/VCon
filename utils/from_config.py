@@ -1,4 +1,5 @@
 from modules import *
+from dataset import *
 
 
 _model_dict = {
@@ -16,10 +17,10 @@ _module_dict = {
 }
 
 _data_module_dict = {
-    'autovc': AutoVCDataModule,
-    'vqvc': VQVCDataModule,
-    'fragmentvc': FragmentVCDataModule,
-    'transformer': TransformerDataModule
+    'autovc': WavMelDataModule,
+    'vqvc': WavMelDataModule,
+    'fragmentvc': MelDataModule,
+    'transformer': MelDataModule
 }
 
 
