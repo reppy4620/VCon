@@ -1,10 +1,12 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
+from fairseq.models.wav2vec import Wav2Vec2Model
 
 from typing import Optional, Tuple, List
 
-from utils import AttributeDict, get_wav_mel
+from utils import AttributeDict, get_wav_mel, get_wav2vec_features
 from .layers import Conv1d
 from .networks import (
     Extractor, Smoother, PostNet
@@ -36,6 +38,10 @@ class FragmentVCModel(ModelMixin):
 
         self.linear = nn.Linear(channel, 80)
         self.post_net = PostNet(params)
+
+        self.vocoder = None
+        self.wav2vec = None
+        self.wav2vec_path = params.wav2vec_path
 
     def forward(self,
                 src: Tensor,
@@ -86,16 +92,27 @@ class FragmentVCModel(ModelMixin):
 
     def inference(self, src_path: str, tgt_path: str):
         self._load_vocoder()
+        self._load_wav2vec()
         mel_src, mel_tgt = self._preprocess(src_path, tgt_path)
         mel_out = self.forward(mel_src, mel_tgt)
         wav = self._mel_to_wav(mel_out)
         return wav
 
+    def _load_wav2vec(self):
+        """Load pretrained Wav2Vec model."""
+        ckpt = torch.load(self.wav2vec_path)
+        model = Wav2Vec2Model.build_model(ckpt["args"], task=None)
+        model.load_state_dict(ckpt["model"])
+        model.remove_pretraining_modules()
+        model.eval()
+        self.wav2vec = model
+
     def _preprocess(self, src_path: str, tgt_path: str):
-        _, mel_src = get_wav_mel(src_path)
+        feat, _ = get_wav2vec_features(src_path, self.wav2vec)
         _, mel_tgt = get_wav_mel(tgt_path)
-        mel_src, mel_tgt = self._preprocess_mel(mel_src), self._preprocess_mel(mel_tgt)
-        return mel_src, mel_tgt
+        feat = self.unsqueeze_for_input(feat)
+        mel_tgt = self._preprocess_mel(mel_tgt)
+        return feat, mel_tgt
 
     def _preprocess_mel(self, mel):
         mel = self.unsqueeze_for_input(mel)

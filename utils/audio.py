@@ -30,8 +30,11 @@ def get_world_features(fn, sr=22050):
 
 def get_wav2vec_features(fn, wav2vec, to_mel=None):
     wav, mel = get_wav_mel(fn, to_mel)
-    feat = wav2vec.extract_features(torch.tensor(wav, dtype=torch.float)[None, :], None)
-    feat = feat.detach().cpu().squeeze(0)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    wav = torch.tensor(wav, dtype=torch.float, device=device)[None, :]
+    with torch.no_grad():
+        feat = wav2vec.extract_features(wav, None)[0]
+        feat = feat.detach().cpu().squeeze(0)
     return feat, mel
 
 

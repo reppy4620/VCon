@@ -1,3 +1,4 @@
+import torch
 import pytorch_lightning as pl
 import torch.nn.functional as F
 
@@ -52,6 +53,17 @@ class TransformerModule(pl.LightningModule):
         loss = F.l1_loss(out, src)
 
         self.log('val_loss', loss, prog_bar=True)
+        return out[0]
+
+    def validation_step_end(self, val_outputs):
+        if self.global_step % 1000 == 0:
+            if isinstance(val_outputs, torch.Tensor):
+                mel = val_outputs.unsqueeze(0)
+            else:
+                mel = val_outputs[0].unsqueeze(0)
+            wav = self.model.vocoder.inverse(mel).detach().cpu()
+            self.logger.experiment.add_audio('sample', wav, global_step=self.global_step, sample_rate=22050)
+            self.logger.experiment.add_image('mel', mel[0], global_step=self.global_step, dataformats='HW')
 
     def configure_optimizers(self):
         # for transformer

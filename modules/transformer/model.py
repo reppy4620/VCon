@@ -1,6 +1,6 @@
 from torch import Tensor
 
-from utils import AttributeDict, normalize, get_wav_mel
+from utils import AttributeDict, get_wav_mel
 from .networks import (
     Encoder, Decoder
 )
@@ -13,6 +13,10 @@ class TransformerModel(ModelMixin):
 
         self.encoder = Encoder(params)
         self.decoder = Decoder(params)
+
+        self.vocoder = None
+
+        self._load_vocoder()
 
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
         c_tgt = self.encoder(tgt)

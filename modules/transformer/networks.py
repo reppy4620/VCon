@@ -1,13 +1,13 @@
 import torch.nn as nn
 
-from .layers import Conv1d, SourceTargetAttention, SelfAttention
+from .layers import Conv1d, ConvExtractor, SourceTargetAttention, SelfAttention
 
 
 class Encoder(nn.Module):
     def __init__(self, params):
         super().__init__()
 
-        self.in_conv = Conv1d(params.mel_size, params.model.channel, 1)
+        self.conv = ConvExtractor(params)
 
         self.layers = nn.ModuleList([
             SelfAttention(params, is_ffn=True) for _ in range(params.model.n_layers)
@@ -15,7 +15,7 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         outputs = list()
-        x = self.in_conv(x).permute(2, 0, 1)
+        x = self.conv(x).permute(2, 0, 1)
         for layer in self.layers:
             x = layer(x)
             outputs.append(x)
@@ -28,7 +28,7 @@ class Decoder(nn.Module):
 
         self.n_layers = params.model.n_layers
 
-        self.in_conv = Conv1d(params.mel_size, params.model.channel, 1)
+        self.conv = ConvExtractor(params)
 
         self.self_attns = nn.ModuleList([
             SelfAttention(params, is_ffn=False) for _ in range(params.model.n_layers)
@@ -36,6 +36,10 @@ class Decoder(nn.Module):
 
         self.st_attns = nn.ModuleList([
             SourceTargetAttention(params, is_ffn=True) for _ in range(params.model.n_layers)
+        ])
+
+        self.smoothers = nn.Sequential(*[
+            SelfAttention(params, is_ffn=True) for _ in range(params.model.n_layers)
         ])
         self.linear = nn.Linear(params.model.channel, params.mel_size)
 
@@ -64,10 +68,11 @@ class Decoder(nn.Module):
 
     def forward(self, src, c_tgt):
         c_tgt = c_tgt[::-1]
-        src = self.in_conv(src).permute(2, 0, 1)
+        src = self.conv(src).permute(2, 0, 1)
         for i in range(self.n_layers):
             src = self.self_attns[i](src)
             src = self.st_attns[i](src, c_tgt[i])
+        src = self.smoothers(src)
         src = self.linear(src.permute(1, 0, 2)).transpose(1, 2)
         src = src + self.post_net(src)
         return src

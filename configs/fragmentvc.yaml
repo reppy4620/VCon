@@ -13,6 +13,8 @@ mel_size: 80
 sampling_rate: 22050
 # seq_len of spectrum during training
 seq_len: 128
+# wav2vec path
+wav2vec_path: pretrained/wav2vec_small.pt
 
 # optimizer params
 optimizer:

@@ -19,7 +19,7 @@ _module_dict = {
 _data_module_dict = {
     'autovc': WavMelDataModule,
     'vqvc': WavMelDataModule,
-    'fragmentvc': MelDataModule,
+    'fragmentvc': Wav2VecMelDataModule,
     'transformer': MelDataModule
 }
 
