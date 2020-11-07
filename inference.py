@@ -6,11 +6,11 @@ from utils import get_config, get_wav, save_sample, module_from_config
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src_path', type=str)
-    parser.add_argument('--tgt_path', type=str)
-    parser.add_argument('--config_path', type=str)
-    parser.add_argument('--ckpt_path', type=str)
-    parser.add_argument('--output_dir', type=str, default='./outputs/vqvc')
+    parser.add_argument('--src_path', type=str, required=True)
+    parser.add_argument('--tgt_path', type=str, required=True)
+    parser.add_argument('--config_path', type=str, required=True)
+    parser.add_argument('--ckpt_path', type=str, required=True)
+    parser.add_argument('--output_dir', type=str, default='./outputs')
     args = parser.parse_args()
 
     params = get_config(args.config_path)

@@ -1,10 +1,13 @@
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 
-from utils import AttributeDict, normalize, get_wav_mel
-from .layers import (
-    SourceTargetAttention, SelfAttention,
-    ConvExtractor, Conv1d
+from typing import Optional, Tuple, List
+
+from utils import AttributeDict, get_wav_mel
+from .layers import Conv1d
+from .networks import (
+    Extractor, Smoother, PostNet
 )
 from ..base import ModelMixin
 
@@ -15,60 +18,71 @@ class FragmentVCModel(ModelMixin):
 
         channel = params.model.channel
 
-        self.source_extractor = ConvExtractor(params)
-        self.target_extractor = ConvExtractor(params)
-
-        self.conv_layers = nn.ModuleList([
-            Conv1d(
-                channel,
-                channel,
-                3
-            ) for _ in range(params.model.n_st_attn)
-        ])
-
-        self.st_attn_layers = nn.ModuleList([
-            SourceTargetAttention(params) for _ in range(params.model.n_st_attn)
-        ])
-
-        self.smoothers = nn.Sequential(*[
-            SelfAttention(params) for _ in range(params.model.n_self_attn)
-        ])
-
-        self.linear = nn.Linear(channel, 80)
-
-        self.post_net = nn.Sequential(
-            Conv1d(params.mel_size, channel, 5),
-            nn.BatchNorm1d(channel),
-            nn.Tanh(),
-            nn.Dropout(0.5),
-            Conv1d(channel, channel, 5),
-            nn.BatchNorm1d(channel),
-            nn.Tanh(),
-            nn.Dropout(0.5),
-            Conv1d(channel, channel, 5),
-            nn.BatchNorm1d(channel),
-            nn.Tanh(),
-            nn.Dropout(0.5),
-            Conv1d(channel, channel, 5),
-            nn.BatchNorm1d(channel),
-            nn.Tanh(),
-            nn.Dropout(0.5),
-            Conv1d(channel, params.mel_size, 5),
-            nn.BatchNorm1d(params.mel_size),
-            nn.Dropout(0.5),
+        self.pre_net = nn.Sequential(
+            nn.Linear(params.model.in_channel, params.model.in_channel),
+            nn.GELU(),
+            nn.Linear(params.model.in_channel, channel)
         )
 
-        self.n_st_attn = params.model.n_st_attn
+        self.conv1 = Conv1d(params.mel_size, channel, 3, padding_mode='replicate')
+        self.conv2 = Conv1d(channel, channel, 3, padding_mode='replicate')
+        self.conv3 = Conv1d(channel, channel, 3, padding_mode='replicate')
 
-    def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
-        src, tgt = self.source_extractor(src), self.target_extractor(tgt)
-        src = src.permute(2, 0, 1)
-        for i in range(self.n_st_attn):
-            tgt = self.conv_layers[i](tgt)
-            src = self.st_attn_layers[i](tgt.permute(2, 0, 1), src)
+        self.extractor1 = Extractor(params)
+        self.extractor2 = Extractor(params)
+        self.extractor3 = Extractor(params)
+
+        self.smoothers = nn.ModuleList([Smoother(params) for _ in range(params.model.n_smoother)])
+
+        self.linear = nn.Linear(channel, 80)
+        self.post_net = PostNet(params)
+
+    def forward(self,
+                src: Tensor,
+                tgt: Tensor,
+                src_mask: Optional[Tensor] = None,
+                tgt_mask: Optional[Tensor] = None
+                ) -> Tuple[Tensor, List[Optional[Tensor]]]:
+        # src: (B, L, C)
+        src = self.pre_net(src)
+        # src: (L, B, C)
+        src = src.transpose(0, 1)
+
+        # tgt*: (B, C, L)
+        tgt1 = self.conv1(tgt)
+        tgt2 = self.conv2(F.gelu(tgt1))
+        tgt3 = self.conv3(F.gelu(tgt2))
+
+        # src: (L, B, C)
+        src, _, attn_map1 = self.extractor1(
+            src,
+            tgt3.permute(2, 0, 1),  # (L, B, C)
+            src_key_padding_mask=src_mask,
+            tgt_key_padding_mask=tgt_mask
+        )
+
+        src, _, attn_map2 = self.extractor1(
+            src,
+            tgt2.permute(2, 0, 1),  # (L, B, C)
+            src_key_padding_mask=src_mask,
+            tgt_key_padding_mask=tgt_mask
+        )
+
+        src, _, attn_map3 = self.extractor1(
+            src,
+            tgt1.permute(2, 0, 1),  # (L, B, C)
+            src_key_padding_mask=src_mask,
+            tgt_key_padding_mask=tgt_mask
+        )
+
+        for smoother in self.smoothers:
+            src, _ = smoother(src, src_key_padding_mask=src_mask)
+
+        # src: (L, B, C) => (B, C, L)
         src = self.linear(src.permute(1, 0, 2)).transpose(1, 2)
         src = src + self.post_net(src)
-        return src
+        # src: (B, C, L)
+        return src, [attn_map1, attn_map2, attn_map3]
 
     def inference(self, src_path: str, tgt_path: str):
         self._load_vocoder()
@@ -84,6 +98,5 @@ class FragmentVCModel(ModelMixin):
         return mel_src, mel_tgt
 
     def _preprocess_mel(self, mel):
-        # mel = normalize(mel)
         mel = self.unsqueeze_for_input(mel)
         return mel

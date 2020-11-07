@@ -26,11 +26,12 @@ If you wanna use another dataset, please rewrite preprocess.py to fit to the dat
 And then, please execute following command.
 
 ```
-$ python preprocess.py --dataset_dir path/to/jvs --output_dir path/to/processed
+$ python preprocess.py --dataset_dir path/to/jvs --output_dir path/to/processed --data_type normal
 
 --dataset_dir: path of jvs dataset which you downloaded from above link
 --output_dir: "path/to/processed" is one of the examples. you can decide path freely.
---world: (optional) extract WORLD features. Although I prepared this option and data module, train process is not prepared.
+--data_type: 'normal', 'world' or 'wav2vec' choose one to fit your dataset. 
+Although 'world' is prepared, training script is not implemented.
 ```
 
 When preprocess ends without --world, .dat files per speaker are in output_dir.

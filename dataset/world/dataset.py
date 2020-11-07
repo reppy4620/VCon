@@ -1,7 +1,7 @@
 import torch
 
 from ..base import DatasetBase
-from utils import get_world_feature
+from utils import get_world_features
 
 
 # Simple dataset
@@ -14,6 +14,6 @@ class WorldDataset(DatasetBase):
 class WorldFromFileDataset(DatasetBase):
     def __getitem__(self, idx):
         fn = self.data[idx]
-        f0, sp, _ = get_world_feature(fn)
+        f0, sp, _ = get_world_features(fn)
         f0, sp = torch.tensor(f0, dtype=torch.float), torch.tensor(sp, dtype=torch.float)
         return f0, sp

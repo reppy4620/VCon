@@ -1,47 +1,20 @@
 import torch.nn as nn
 from torch import Tensor
 
+from typing import Optional, Tuple
+
 from utils import AttributeDict
 
 
-def Conv1d(c_in: int, c_out: int, k: int, s: int = 1, d: int = 1):
+def Conv1d(c_in: int, c_out: int, k: int, s: int = 1, d: int = 1, padding_mode='zeros'):
     p = (k - 1) // 2
-    conv = nn.Conv1d(c_in, c_out, k, s, p, dilation=d)
+    conv = nn.Conv1d(c_in, c_out, k, s, p, dilation=d, padding_mode=padding_mode)
     nn.init.kaiming_normal_(conv.weight)
     return conv
 
 
-class ConvExtractor(nn.Module):
-    def __init__(self, params: AttributeDict):
-        super().__init__()
-
-        channel = params.model.channel
-
-        self.conv_layers = nn.ModuleList([
-            nn.Sequential(
-                Conv1d(params.mel_size, channel, 9),
-                nn.BatchNorm1d(channel),
-                nn.GELU()
-            )
-        ])
-
-        for i in range(params.model.n_conv-1):
-            self.conv_layers.append(
-                nn.Sequential(
-                    Conv1d(channel, channel, 5),
-                    nn.BatchNorm1d(channel),
-                    nn.GELU()
-                )
-            )
-
-    def forward(self, x: Tensor) -> Tensor:
-        for conv in self.conv_layers:
-            x = conv(x)
-        return x
-
-
 class MultiHeadAttentionLayer(nn.Module):
-    def __init__(self, params: AttributeDict):
+    def __init__(self, params: AttributeDict, is_ffn: bool):
         super().__init__()
 
         channel = params.model.channel
@@ -50,21 +23,33 @@ class MultiHeadAttentionLayer(nn.Module):
         self.attn_norm = nn.LayerNorm(channel)
         self.attn_dropout = nn.Dropout(params.model.dropout)
 
-        self.ffn = nn.Sequential(
-            Conv1d(channel, channel*2, 1),
-            nn.GELU(),
-            Conv1d(channel*2, channel, 1)
+        self.is_ffn = is_ffn
+        if is_ffn:
+            self.ffn = nn.Sequential(
+                Conv1d(channel, channel*2, 9),
+                nn.GELU(),
+                Conv1d(channel*2, channel, 1)
+            )
+            self.ffn_norm = nn.LayerNorm(channel)
+            self.ffn_dropout = nn.Dropout(params.model.dropout)
+
+    def _attn(self,
+              query: Tensor,
+              key: Tensor,
+              value: Tensor,
+              attn_mask: Optional[Tensor] = None,
+              key_padding_mask: Optional[Tensor] = None
+              ) -> Tuple[Tensor, Optional[Tensor]]:
+        x, attn_map = self.attn(
+            query,
+            key,
+            value,
+            attn_mask=attn_mask,
+            key_padding_mask=key_padding_mask
         )
-        self.ffn_norm = nn.LayerNorm(channel)
-        self.ffn_dropout = nn.Dropout(params.model.dropout)
-
-        self.attn_map = None
-
-    def _attn(self, query: Tensor, key: Tensor, value: Tensor) -> Tensor:
-        x, self.attn_map = self.attn(query, key, value)
         x = x + self.attn_dropout(x)
         x = self.attn_norm(x)
-        return x
+        return x, attn_map
 
     def _ffn(self, x: Tensor) -> Tensor:
         # (L, B, C) => (B, C, L)
@@ -82,14 +67,25 @@ class MultiHeadAttentionLayer(nn.Module):
 
 
 class SelfAttention(MultiHeadAttentionLayer):
-    def forward(self, x: Tensor) -> Tensor:
-        x = self._attn(x, x, x)
-        x = self._ffn(x)
-        return x
+    def forward(self,
+                x: Tensor,
+                attn_mask: Optional[Tensor] = None,
+                key_padding_mask: Optional[Tensor] = None
+                ) -> Tuple[Tensor, Optional[Tensor]]:
+        x, attn_map = self._attn(x, x, x, attn_mask, key_padding_mask)
+        if self.is_ffn:
+            x = self._ffn(x)
+        return x, attn_map
 
 
 class SourceTargetAttention(MultiHeadAttentionLayer):
-    def forward(self, mem: Tensor, x: Tensor) -> Tensor:
-        x = self._attn(x, mem, mem)
-        x = self._ffn(x)
-        return x
+    def forward(self,
+                x: Tensor,
+                mem: Tensor,
+                attn_mask: Optional[Tensor] = None,
+                key_padding_mask: Optional[Tensor] = None
+                ) -> Tuple[Tensor, Optional[Tensor]]:
+        x, attn_map = self._attn(x, mem, mem, attn_mask, key_padding_mask)
+        if self.is_ffn:
+            x = self._ffn(x)
+        return x, attn_map

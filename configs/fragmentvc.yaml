@@ -20,10 +20,8 @@ optimizer:
 
 # model params
 model:
-  in_channel: 80
+  in_channel: 768
   channel: 512
-  n_conv: 3
-  n_st_attn: 3
-  n_self_attn: 5
+  n_smoother: 3
   n_head: 8
   dropout: 0.1

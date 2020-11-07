@@ -22,10 +22,17 @@ def get_wav_mel(fn, to_mel=None):
     return wav, mel.cpu()
 
 
-def get_world_feature(fn, sr=22050):
+def get_world_features(fn, sr=22050):
     wav = get_wav(fn)
     f0, sp, ap = pw.wav2world(wav, sr)
     return f0, sp.T, ap.T
+
+
+def get_wav2vec_features(fn, wav2vec, to_mel=None):
+    wav, mel = get_wav_mel(fn, to_mel)
+    feat = wav2vec.extract_features(torch.tensor(wav, dtype=torch.float)[None, :], None)
+    feat = feat.detach().cpu().squeeze(0)
+    return feat, mel
 
 
 def normalize(x):

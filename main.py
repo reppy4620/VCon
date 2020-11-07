@@ -12,9 +12,9 @@ if __name__ == '__main__':
     warnings.simplefilter('ignore')
 
     parser = ArgumentParser()
-    parser.add_argument('-c', '--config_path', type=str)
-    parser.add_argument('-d', '--data_dir', type=str)
-    parser.add_argument('-m', '--model_dir', type=str)
+    parser.add_argument('-c', '--config_path', type=str, required=True)
+    parser.add_argument('-d', '--data_dir', type=str, required=True)
+    parser.add_argument('-m', '--model_dir', type=str, default='./models')
     args = parser.parse_args()
 
     config = get_config(args.config_path)
