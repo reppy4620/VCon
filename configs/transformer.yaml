@@ -1,8 +1,8 @@
 # experiment params
 exp_name: transformer
 seed: 42
-batch_size: 256
-n_epochs: 4000
+batch_size: 512
+n_epochs: 2000
 
 train_ratio: 0.98
 from_fn: false
@@ -13,6 +13,8 @@ mel_size: 80
 sampling_rate: 22050
 # seq_len of spectrum during training
 seq_len: 128
+# whether normalize mel-spectrum
+is_normalize: false
 
 # optimizer params
 optimizer:
@@ -22,7 +24,9 @@ optimizer:
 model:
   in_channel: 80
   channel: 256
-  n_conv: 3
+  emb_dim: 32
+  n_emb: 512
+  n_ce: 6
   n_layers: 3
   n_head: 8
   dropout: 0.1

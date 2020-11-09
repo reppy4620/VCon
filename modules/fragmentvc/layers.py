@@ -47,18 +47,18 @@ class MultiHeadAttentionLayer(nn.Module):
             attn_mask=attn_mask,
             key_padding_mask=key_padding_mask
         )
-        x = x + self.attn_dropout(x)
+        x = query + self.attn_dropout(x)
         x = self.attn_norm(x)
         return x, attn_map
 
-    def _ffn(self, x: Tensor) -> Tensor:
+    def _ffn(self, src: Tensor) -> Tensor:
         # (L, B, C) => (B, C, L)
-        x = x.permute(1, 2, 0)
+        x = src.permute(1, 2, 0)
         x = self.ffn(x)
         # (B, C, L) => (L, B, C)
         x = x.permute(2, 0, 1)
 
-        x = x + self.ffn_dropout(x)
+        x = src + self.ffn_dropout(x)
         x = self.ffn_norm(x)
         return x
 

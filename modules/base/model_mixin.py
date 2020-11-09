@@ -36,11 +36,13 @@ class ModelMixin(nn.Module):
             self.vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
 
     def _mel_to_wav(self, mel):
-        # mel = denormalize(mel)
+        if self.is_normalize:
+            mel = denormalize(mel)
         wav = self.vocoder.inverse(mel).squeeze(0).detach().cpu().numpy()
         return wav
 
-    def _adjust_length(self, mel, freq):
+    @staticmethod
+    def _adjust_length(mel, freq):
         t_dim = mel.size(-1)
         mod_val = t_dim % freq
         if mod_val != 0:

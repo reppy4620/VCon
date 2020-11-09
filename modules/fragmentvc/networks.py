@@ -17,10 +17,10 @@ class Extractor(nn.Module):
     def forward(self,
                 src: Tensor,
                 tgt: Tensor,
-                src_attn_mask: Optional[Tensor],
-                tgt_attn_mask: Optional[Tensor],
-                src_key_padding_mask: Optional[Tensor],
-                tgt_key_padding_mask: Optional[Tensor]
+                src_attn_mask: Optional[Tensor] = None,
+                tgt_attn_mask: Optional[Tensor] = None,
+                src_key_padding_mask: Optional[Tensor] = None,
+                tgt_key_padding_mask: Optional[Tensor] = None
                 ) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor]]:
         src, self_attn_map = self.self_attn(
             src,
@@ -43,8 +43,8 @@ class Smoother(nn.Module):
 
     def forward(self,
                 src: Tensor,
-                src_attn_mask: Optional[Tensor],
-                src_key_padding_mask: Optional[Tensor]
+                src_attn_mask: Optional[Tensor] = None,
+                src_key_padding_mask: Optional[Tensor] = None
                 ) -> Tuple[Tensor, Optional[Tensor]]:
         src, attn_map = self.self_attn(
             src,

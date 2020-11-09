@@ -10,8 +10,8 @@ class Wav2VecMelDataset(DatasetBase):
         self.indices = indices
 
     def __getitem__(self, idx):
-        i, z, src_mel = self.data[idx]
+        i, (z, src_mel) = self.data[idx]
         if self.indices is None:
-            return z, src_mel, src_mel
+            return z, src_mel, src_mel.T
         _, _, tgt_mel = self.data[random.choice(self.indices[i])]
-        return z, src_mel, tgt_mel
+        return z, src_mel, tgt_mel.T

@@ -43,6 +43,8 @@ class FragmentVCModel(ModelMixin):
         self.wav2vec = None
         self.wav2vec_path = params.wav2vec_path
 
+        self._load_vocoder()
+
     def forward(self,
                 src: Tensor,
                 tgt: Tensor,

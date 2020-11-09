@@ -1,4 +1,6 @@
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 
 from utils import AttributeDict
@@ -12,32 +14,88 @@ def Conv1d(c_in: int, c_out: int, k: int, s: int = 1, d: int = 1):
 
 
 class ConvExtractor(nn.Module):
-    def __init__(self, params: AttributeDict):
+    def __init__(self, in_c, middle_c, out_c, n_layer):
         super().__init__()
-
-        channel = params.model.channel
 
         self.conv_layers = nn.ModuleList([
             nn.Sequential(
-                Conv1d(params.mel_size, channel, 9),
-                nn.BatchNorm1d(channel),
+                Conv1d(in_c, middle_c, 9),
+                nn.BatchNorm1d(middle_c),
                 nn.GELU()
             )
         ])
 
-        for i in range(params.model.n_conv-1):
+        for i in range(n_layer-2):
             self.conv_layers.append(
                 nn.Sequential(
-                    Conv1d(channel, channel, 5),
-                    nn.BatchNorm1d(channel),
+                    Conv1d(middle_c, middle_c, 5),
+                    nn.BatchNorm1d(middle_c),
                     nn.GELU()
                 )
             )
+
+        self.conv_layers.append(
+            nn.Sequential(
+                Conv1d(middle_c, out_c, 5),
+                nn.BatchNorm1d(out_c),
+                nn.GELU()
+            )
+        )
 
     def forward(self, x: Tensor) -> Tensor:
         for conv in self.conv_layers:
             x = conv(x)
         return x
+
+
+class Quantize(nn.Module):
+    def __init__(self, dim, n_embed, decay=0.99, eps=1e-5):
+        super().__init__()
+
+        self.dim = dim
+        self.n_embed = n_embed
+        self.decay = decay
+        self.eps = eps
+
+        embed = torch.empty(dim, n_embed).normal_()
+        self.register_buffer("embed", embed)
+        self.register_buffer("cluster_size", torch.zeros(n_embed))
+        self.register_buffer("embed_avg", embed.clone())
+
+    def forward(self, input):
+        flatten = input.reshape(-1, self.dim)
+        dist = (
+            flatten.pow(2).sum(1, keepdim=True)
+            - 2 * flatten @ self.embed
+            + self.embed.pow(2).sum(0, keepdim=True)
+        )
+        _, embed_ind = (-dist).max(1)
+        embed_onehot = F.one_hot(embed_ind, self.n_embed).type(flatten.dtype)
+        embed_ind = embed_ind.view(*input.shape[:-1])
+        quantize = self.embed_code(embed_ind)
+
+        if self.training:
+            embed_onehot_sum = embed_onehot.sum(0)
+            embed_sum = flatten.transpose(0, 1) @ embed_onehot
+
+            self.cluster_size.data.mul_(self.decay).add_(
+                embed_onehot_sum, alpha=1 - self.decay
+            )
+            self.embed_avg.data.mul_(self.decay).add_(embed_sum, alpha=1 - self.decay)
+            n = self.cluster_size.sum()
+            cluster_size = (
+                (self.cluster_size + self.eps) / (n + self.n_embed * self.eps) * n
+            )
+            embed_normalized = self.embed_avg / cluster_size.unsqueeze(0)
+            self.embed.data.copy_(embed_normalized)
+
+        diff = (quantize.detach() - input).pow(2).mean()
+        quantize = input + (quantize - input).detach()
+
+        return quantize, diff
+
+    def embed_code(self, embed_id):
+        return F.embedding(embed_id, self.embed.transpose(0, 1))
 
 
 class MultiHeadAttentionLayer(nn.Module):
@@ -64,18 +122,18 @@ class MultiHeadAttentionLayer(nn.Module):
 
     def _attn(self, query: Tensor, key: Tensor, value: Tensor) -> Tensor:
         x, self.attn_map = self.attn(query, key, value)
-        x = x + self.attn_dropout(x)
+        x = query + self.attn_dropout(x)
         x = self.attn_norm(x)
         return x
 
-    def _ffn(self, x: Tensor) -> Tensor:
+    def _ffn(self, src: Tensor) -> Tensor:
         # (L, B, C) => (B, C, L)
-        x = x.permute(1, 2, 0)
+        x = src.permute(1, 2, 0)
         x = self.ffn(x)
         # (B, C, L) => (L, B, C)
         x = x.permute(2, 0, 1)
 
-        x = x + self.ffn_dropout(x)
+        x = src + self.ffn_dropout(x)
         x = self.ffn_norm(x)
         return x
 

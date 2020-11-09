@@ -36,7 +36,8 @@ if __name__ == '__main__':
         filepath=save_fn,
         save_last=True,
         monitor='val_loss',
-        save_top_k=5
+        save_top_k=5,
+        period=100
     )
 
     tb_logger = TensorBoardLogger(

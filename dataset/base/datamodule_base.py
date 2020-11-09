@@ -4,6 +4,7 @@ import pytorch_lightning as pl
 
 from abc import abstractmethod
 from torch.utils.data import DataLoader
+from utils import normalize
 
 
 class DataModuleBase(pl.LightningDataModule):
@@ -14,6 +15,8 @@ class DataModuleBase(pl.LightningDataModule):
         # following variable will be initialized in setup function.
         self.train_x = None
         self.valid_x = None
+
+        self.is_normalize = params.is_normalize
 
     def train_dataloader(self):
         return DataLoader(
@@ -43,7 +46,8 @@ class DataModuleBase(pl.LightningDataModule):
         # maybe, np.random.randint is faster than pure python's random.randint
         sig_offset = np.random.randint(0, max_offset + 1)
         x = x[:, sig_offset:sig_offset + self.params.seq_len]
-        # x = normalize(x)
+        if self.is_normalize:
+            x = normalize(x)
         return x.float()
 
     @abstractmethod
