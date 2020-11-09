@@ -60,6 +60,8 @@ class Decoder(nn.Module):
         self.n_layers = params.model.n_dec_layers
 
     def forward(self, x, means, stds):
+        means = means[::-1]
+        stds = stds[::-1]
         x = self.in_conv(x)
 
         for i in range(self.n_layers):
