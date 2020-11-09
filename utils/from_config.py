@@ -3,24 +3,27 @@ from dataset import *
 
 
 _model_dict = {
+    'againvc': AgainVCModel,
     'autovc': AutoVCModel,
-    'vqvc': VQVCModel,
     'fragmentvc': FragmentVCModel,
-    'transformer': TransformerModel
+    'transformer': TransformerModel,
+    'vqvc': VQVCModel,
 }
 
 _module_dict = {
+    'againvc': AgainVCModule,
     'autovc': AutoVCModule,
-    'vqvc': VQVCModule,
     'fragmentvc': FragmentVCModule,
-    'transformer': TransformerModule
+    'transformer': TransformerModule,
+    'vqvc': VQVCModule,
 }
 
 _data_module_dict = {
+    'againvc': MelDataModule,
     'autovc': WavMelDataModule,
-    'vqvc': WavMelDataModule,
     'fragmentvc': Wav2VecMelDataModule,
-    'transformer': MelDataModule
+    'transformer': MelDataModule,
+    'vqvc': WavMelDataModule,
 }
 
 

@@ -21,7 +21,7 @@ class VQVCModule(pl.LightningModule):
         self.model = VQVCModel(params)
 
         self.spec_augmenter = SpecAugmentation(
-            time_drop_width=6,
+            time_drop_width=3,
             time_stripes_num=2,
             freq_drop_width=3,
             freq_stripes_num=2

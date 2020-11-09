@@ -4,12 +4,12 @@ import torch.nn.functional as F
 
 from adabelief_pytorch import AdaBelief
 
-from .model import TransformerModel
+from .model import AgainVCModel
 from transforms import SpecAugmentation
 from utils import AttributeDict
 
 
-class TransformerModule(pl.LightningModule):
+class AgainVCModule(pl.LightningModule):
 
     def __init__(self, params):
         super().__init__()
@@ -19,7 +19,7 @@ class TransformerModule(pl.LightningModule):
 
         self.hparams = params
 
-        self.model = TransformerModel(params)
+        self.model = AgainVCModel(params)
 
         self.spec_augmenter = SpecAugmentation(
             time_drop_width=3,
@@ -42,16 +42,12 @@ class TransformerModule(pl.LightningModule):
             src_h = self.spec_augmenter(src)
             tgt_h = self.spec_augmenter(src)
 
-        out, q_loss = self.model(src_h, tgt_h)
-        # out, q_loss = self.model(src, tgt)
+        out = self.model(src_h, tgt_h)
 
-        recon_loss = F.l1_loss(out, src)
-        loss = recon_loss + q_loss
+        loss = F.l1_loss(out, src)
 
         self.log_dict({
             'loss': loss,
-            'r_loss': recon_loss,
-            'q_loss': q_loss
         }, on_epoch=True)
 
         return loss
@@ -59,25 +55,22 @@ class TransformerModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         src, tgt = batch
 
-        out, q_loss = self.model(src, tgt)
+        out = self.model(src, tgt)
 
-        recon_loss = F.l1_loss(out, src)
-        loss = recon_loss + q_loss
+        loss = F.l1_loss(out, src)
 
         self.log_dict({
             'val_loss': loss,
-            'val_r_loss': recon_loss,
-            'val_q_loss': q_loss,
             'step': self.global_step
         }, prog_bar=True)
         return out[0]
 
     def validation_step_end(self, val_outputs):
-        if self.current_epoch == 1000:
+        if self.current_epoch == 500:
             self.use_diff = True
             self.print('\n\n\nSwitch target mel-spectrum\n\n\n')
 
-        if self.global_step % 10 == 0:
+        if self.global_step % 50 == 0:
             if isinstance(val_outputs, torch.Tensor):
                 mel = val_outputs.unsqueeze(0)
             else:
@@ -91,10 +84,5 @@ class TransformerModule(pl.LightningModule):
         return AdaBelief(
             params=self.model.parameters(),
             lr=self.hparams.optimizer.lr,
-            eps=1e-16,
-            weight_decay=1e-4,
-            weight_decouple=True,
-            rectify=True,
-            fixed_decay=False,
-            amsgrad=False
+            weight_decay=1.2e-6
         )

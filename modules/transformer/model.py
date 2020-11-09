@@ -4,21 +4,16 @@ from utils import AttributeDict, get_wav_mel, normalize, denormalize
 from .networks import (
     ContentEncoder, SpeakerEncoder, Decoder
 )
-from ..base import ModelMixin
+from ..base import BaseModel
 
 
-class TransformerModel(ModelMixin):
+class TransformerModel(BaseModel):
     def __init__(self, params: AttributeDict):
-        super().__init__()
+        super().__init__(params)
 
         self.content_encoder = ContentEncoder(params)
         self.speaker_encoder = SpeakerEncoder(params)
         self.decoder = Decoder(params)
-
-        self.vocoder = None
-        self._load_vocoder()
-
-        self.is_normalize = params.is_normalize
 
     def forward(self, src: Tensor, tgt: Tensor) -> Tuple[Tensor, Tensor]:
         src, q_loss = self.content_encoder(src)
@@ -27,18 +22,9 @@ class TransformerModel(ModelMixin):
         return src, q_loss
 
     def inference(self, src_path: str, tgt_path: str):
-        self._load_vocoder()
         mel_src, mel_tgt = self._preprocess(src_path, tgt_path)
         mel_out, _ = self.forward(mel_src, mel_tgt)
         wav = self._mel_to_wav(mel_out)
-        return wav
-
-    def inverse(self, mel: Tensor):
-        if len(mel.size()) == 2:
-            mel = mel.unsqueeze(0)
-        if self.is_normalize:
-            mel = denormalize(mel)
-        wav = self.vocoder.inverse(mel).detach().cpu()
         return wav
 
     def _preprocess(self, src_path: str, tgt_path: str):

@@ -1,16 +1,21 @@
 import torch
+from resemblyzer import VoiceEncoder
 
-from ..base import ModelMixin
-from utils import normalize, denormalize, get_wav_mel
+from utils import normalize, get_wav_mel
+from ..base import BaseModel
+from .networks import Encoder, Decoder, Postnet
 
 
-class AutoVCModel(ModelMixin):
-    def __init__(self):
-        super().__init__()
+class AutoVCModel(BaseModel):
+    def __init__(self, params):
+        super().__init__(params)
 
-        # following variable is initialized in inherits class
-        self.style_encoder = None
-        self.vocoder = None
+        self.encoder = Encoder(params.model.dim_neck, params.speaker_emb_dim, params.model.freq)
+        self.decoder = Decoder(params.model.dim_neck, params.speaker_emb_dim, params.model.dim_pre)
+        self.postnet = Postnet()
+
+        self.style_encoder = VoiceEncoder()
+        self.freeze(self.speaker_encoder)
 
     def forward(self, wavs, mels):
         c_src = self._make_speaker_vectors(wavs, mels.size(-1), mels.device)
@@ -25,10 +30,7 @@ class AutoVCModel(ModelMixin):
         )
 
     def inference(self, src_path: str, tgt_path: str):
-        self._load_vocoder()
         wav_src, wav_tgt, mel_src = self._preprocess(src_path, tgt_path)
-        mel_src = self._adjust_length(mel_src)
-        mel_src = self.unsqueeze_for_input(mel_src)
 
         c_src = self._make_speaker_vectors([wav_src], mel_src.size(-1), mel_src.device)
         c_tgt = self._make_speaker_vectors([wav_tgt], mel_src.size(-1), mel_src.device)
@@ -69,7 +71,8 @@ class AutoVCModel(ModelMixin):
         return wav_src, wav_tgt, mel_src
 
     def _preprocess_mel(self, mel):
-        mel = normalize(mel)
+        if self.is_normalize:
+            mel = normalize(mel)
         mel = self._adjust_length(mel, self.freq)
         mel = self.unsqueeze_for_input(mel)
         return mel

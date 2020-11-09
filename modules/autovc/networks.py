@@ -7,10 +7,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .layers import ConvNorm, LinearNorm, AttnBlock, VQEmbeddingEMA
+from .layers import ConvNorm, LinearNorm
 
 
-class NormalEncoder(nn.Module):
+class Encoder(nn.Module):
     def __init__(self, dim_neck, dim_emb, freq):
         super().__init__()
         self.dim_neck = dim_neck
@@ -57,92 +57,6 @@ class NormalEncoder(nn.Module):
         ]
 
         return codes
-
-
-class AttnEncoder(nn.Module):
-    def __init__(self, dim_neck, dim_emb):
-        super().__init__()
-        self.dim_neck = dim_neck
-
-        self.convolutions = nn.ModuleList([
-            nn.Sequential(
-                ConvNorm(
-                    in_channels=80 + dim_emb if i == 0 else 512,
-                    out_channels=512,
-                    kernel_size=5, stride=1,
-                    padding=2,
-                    dilation=1,
-                    w_init_gain='relu'
-                ),
-                nn.BatchNorm1d(512, affine=True),
-            ) for i in range(3)
-        ])
-
-        self.lstm = nn.LSTM(512, dim_neck, 2, batch_first=True, bidirectional=True)
-        self.attn_forward = AttnBlock(dim_neck)
-        self.attn_backward = AttnBlock(dim_neck)
-
-    def forward(self, x, c_src):
-        x = torch.cat((x, c_src), dim=1)
-
-        for conv in self.convolutions:
-            x = F.relu(conv(x))
-        x = x.transpose(1, 2)
-
-        outputs, _ = self.lstm(x)
-        out_forward = outputs[:, :, :self.dim_neck].transpose(1, 2)
-        out_backward = outputs[:, :, self.dim_neck:].transpose(1, 2)
-
-        codes = torch.cat((self.attn_forward(out_forward), self.attn_backward(out_backward)), dim=1)
-
-        return codes
-
-
-class VQEncoder(nn.Module):
-    def __init__(self, dim_neck, dim_emb, freq, n_embeddings, embedding_dim):
-        super().__init__()
-        self.dim_neck = dim_neck
-        self.freq = freq
-
-        self.convolutions = nn.ModuleList([
-            nn.Sequential(
-                ConvNorm(
-                    in_channels=80 + dim_emb if i == 0 else 512,
-                    out_channels=512,
-                    kernel_size=5, stride=1,
-                    padding=2,
-                    dilation=1,
-                    w_init_gain='relu'
-                ),
-                nn.BatchNorm1d(512, affine=True)
-            ) for i in range(3)
-        ])
-
-        self.lstm = nn.LSTM(512, dim_neck, 2, batch_first=True, bidirectional=True)
-        self.vq_forward = VQEmbeddingEMA(n_embeddings, embedding_dim)
-        self.vq_backward = VQEmbeddingEMA(n_embeddings, embedding_dim)
-
-    def forward(self, x, c_src):
-        x = torch.cat((x, c_src), dim=1)
-
-        for conv in self.convolutions:
-            x = F.relu(conv(x))
-        x = x.transpose(1, 2)
-
-        outputs, _ = self.lstm(x)
-        out_forward = outputs[:, :, :self.dim_neck]
-        out_backward = outputs[:, :, self.dim_neck:]
-
-        codes_f, loss_f = self.vq_forward(out_forward)
-        codes_b, loss_b = self.vq_backward(out_backward)
-        codes = [
-            torch.cat(
-                (codes_f[:, i, :], codes_b[:, i + self.freq - 1, :]),
-                dim=-1
-            ) for i in range(0, outputs.size(1), self.freq)
-        ]
-
-        return codes, loss_f + loss_b
 
 
 class Decoder(nn.Module):

@@ -1,0 +1,29 @@
+# experiment params
+exp_name: againvc
+seed: 42
+batch_size: 512
+n_epochs: 2000
+
+train_ratio: 0.98
+from_fn: false
+
+# mel-spectrogram bin size
+mel_size: 80
+# sampling rate
+sampling_rate: 22050
+# seq_len of spectrum during training
+seq_len: 128
+# whether normalize mel-spectrum
+is_normalize: false
+
+# optimizer params
+optimizer:
+  lr: 0.001
+
+# model params
+model:
+  channel: 256
+  latent_channel: 32
+  act_name: tanhexp
+  n_enc_layers: 6
+  n_dec_layers: 6

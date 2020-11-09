@@ -2,21 +2,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from fairseq.models.wav2vec import Wav2Vec2Model
+# from fairseq.models.wav2vec import Wav2Vec2Model
 
 from typing import Optional, Tuple, List
 
-from utils import AttributeDict, get_wav_mel, get_wav2vec_features
+from utils import AttributeDict, get_wav_mel, get_wav2vec_features, normalize
 from .layers import Conv1d
 from .networks import (
     Extractor, Smoother, PostNet
 )
-from ..base import ModelMixin
+from ..base import BaseModel
 
 
-class FragmentVCModel(ModelMixin):
+class FragmentVCModel(BaseModel):
     def __init__(self, params: AttributeDict):
-        super().__init__()
+        super().__init__(params)
 
         channel = params.model.channel
 
@@ -42,8 +42,6 @@ class FragmentVCModel(ModelMixin):
         self.vocoder = None
         self.wav2vec = None
         self.wav2vec_path = params.wav2vec_path
-
-        self._load_vocoder()
 
     def forward(self,
                 src: Tensor,
@@ -100,14 +98,15 @@ class FragmentVCModel(ModelMixin):
         wav = self._mel_to_wav(mel_out)
         return wav
 
+    # TODO
     def _load_wav2vec(self):
         """Load pretrained Wav2Vec model."""
         ckpt = torch.load(self.wav2vec_path)
-        model = Wav2Vec2Model.build_model(ckpt["args"], task=None)
-        model.load_state_dict(ckpt["model"])
-        model.remove_pretraining_modules()
-        model.eval()
-        self.wav2vec = model
+        # model = Wav2Vec2Model.build_model(ckpt["args"], task=None)
+        # model.load_state_dict(ckpt["model"])
+        # model.remove_pretraining_modules()
+        # model.eval()
+        # self.wav2vec = model
 
     def _preprocess(self, src_path: str, tgt_path: str):
         feat, _ = get_wav2vec_features(src_path, self.wav2vec)
@@ -117,5 +116,7 @@ class FragmentVCModel(ModelMixin):
         return feat, mel_tgt
 
     def _preprocess_mel(self, mel):
+        if self.is_normalize:
+            mel = normalize(mel)
         mel = self.unsqueeze_for_input(mel)
         return mel

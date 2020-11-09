@@ -5,7 +5,14 @@ import torch.nn.functional as F
 from utils import denormalize
 
 
-class ModelMixin(nn.Module):
+class BaseModel(nn.Module):
+
+    def __init__(self, params):
+        super().__init__()
+
+        self.vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
+
+        self.is_normalize = params.is_normalize
 
     # for training
     def forward(self, *args):
@@ -31,14 +38,19 @@ class ModelMixin(nn.Module):
             raise ValueError("len(x.size()) must be 2 or 3")
         return x
 
-    def _load_vocoder(self):
-        if self.vocoder is None:
-            self.vocoder = torch.hub.load('descriptinc/melgan-neurips', 'load_melgan')
-
     def _mel_to_wav(self, mel):
         if self.is_normalize:
             mel = denormalize(mel)
         wav = self.vocoder.inverse(mel).squeeze(0).detach().cpu().numpy()
+        return wav
+
+    def inverse(self, mel):
+        if len(mel.size()) == 2:
+            mel = mel.unsqueeze(0)
+        if self.is_normalize:
+            mel = denormalize(mel)
+        wav = self.vocoder.inverse(mel).detach().cpu()
+        # wav: torch.Tensor (1, L)
         return wav
 
     @staticmethod

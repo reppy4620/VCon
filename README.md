@@ -6,9 +6,10 @@ You can freely add different model, and train with common procedure.
 I've implemented several models based on the following paper,
 but they have different parameters and architectures than the models described in the paper.
 
-1. AutoVC : [arXiv](https://arxiv.org/abs/1905.05879)
-2. VQVC+ : [arXiv](https://arxiv.org/abs/2006.04154)
-3. FragmentVC : [arXiv](https://arxiv.org/abs/2010.14150)
+- AutoVC : [arXiv](https://arxiv.org/abs/1905.05879)
+- VQVC+ : [arXiv](https://arxiv.org/abs/2006.04154)
+- FragmentVC : [arXiv](https://arxiv.org/abs/2010.14150)
+- AGAIN-VC: [arXiv](https://arxiv.org/abs/2011.00316)
 
 # Usage
 

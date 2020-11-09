@@ -1,22 +1,19 @@
 import torch
 from resemblyzer import VoiceEncoder
 
-from utils import normalize, denormalize, get_wav_mel
+from utils import normalize, get_wav_mel
 from .networks import Encoder, Decoder
-from ..base import ModelMixin
+from ..base import BaseModel
 
 
-class VQVCModel(ModelMixin):
+class VQVCModel(BaseModel):
     def __init__(self, params):
-        super().__init__()
+        super().__init__(params)
 
         self.encoder = Encoder(params)
         self.decoder = Decoder(params)
 
         self.speaker_encoder = VoiceEncoder()
-
-        self.vocoder = None
-
         self.freeze(self.speaker_encoder)
 
     def forward(self, wavs, mels):
@@ -26,10 +23,7 @@ class VQVCModel(ModelMixin):
         return dec, diff
 
     def inference(self, src_path: str, tgt_path: str):
-        self._load_vocoder()
         wav_src, wav_tgt, mel_src = self._preprocess(src_path, tgt_path)
-        mel_src = self._adjust_length(mel_src)
-        mel_src = self.unsqueeze_for_input(mel_src)
 
         emb = self._make_speaker_vectors([wav_tgt], mel_src.device)
 
@@ -47,10 +41,12 @@ class VQVCModel(ModelMixin):
     def _preprocess(self, src_path: str, tgt_path: str):
         wav_src, mel_src = get_wav_mel(src_path)
         wav_tgt, _ = get_wav_mel(tgt_path)
+        mel_src = self._preprocess_mel(mel_src)
         return wav_src, wav_tgt, mel_src
 
     def _preprocess_mel(self, mel):
-        mel = normalize(mel)
+        if self.is_normalize:
+            mel = normalize(mel)
         mel = self._adjust_length(mel, freq=4)
         mel = self.unsqueeze_for_input(mel)
         return mel

@@ -1,1 +1,1 @@
-from .model_mixin import ModelMixin
+from .base_model import BaseModel
