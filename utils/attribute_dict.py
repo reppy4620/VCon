@@ -18,7 +18,7 @@ class AttributeDict(dict):
         for arg in args:
             if isinstance(arg, dict):
                 for k, v in arg.items():
-                    # if child is dict object, change to Map object recursively
+                    # if child is dict object, change to AttributeDict object recursively
                     if isinstance(v, dict):
                         v = AttributeDict(v)
                     self[k] = v

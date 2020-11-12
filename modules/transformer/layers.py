@@ -13,38 +13,49 @@ def Conv1d(c_in: int, c_out: int, k: int, s: int = 1, d: int = 1):
     return conv
 
 
+class ResidualConv(nn.Module):
+    def __init__(self, channel):
+        super().__init__()
+
+        self.layer1 = nn.Sequential(
+            Conv1d(channel, channel, 5),
+            nn.BatchNorm1d(channel),
+            nn.GELU()
+        )
+        self.layer2 = nn.Sequential(
+            Conv1d(channel, channel, 5),
+            nn.BatchNorm1d(channel)
+        )
+
+    def forward(self, src: Tensor) -> Tensor:
+        x = self.layer1(src)
+        x = src + self.layer2(x)
+        x = F.gelu(x)
+        return x
+
+
 class ConvExtractor(nn.Module):
     def __init__(self, in_c, middle_c, out_c, n_layer):
         super().__init__()
 
-        self.conv_layers = nn.ModuleList([
-            nn.Sequential(
-                Conv1d(in_c, middle_c, 9),
-                nn.BatchNorm1d(middle_c),
-                nn.GELU()
-            )
-        ])
+        self.in_conv = nn.Sequential(
+            Conv1d(in_c, middle_c, 9),
+            nn.BatchNorm1d(middle_c),
+            nn.GELU()
+        )
 
-        for i in range(n_layer-2):
-            self.conv_layers.append(
-                nn.Sequential(
-                    Conv1d(middle_c, middle_c, 5),
-                    nn.BatchNorm1d(middle_c),
-                    nn.GELU()
-                )
-            )
+        self.conv_layers = nn.Sequential(*[ResidualConv(middle_c) for _ in range(n_layer-2)])
 
-        self.conv_layers.append(
-            nn.Sequential(
-                Conv1d(middle_c, out_c, 5),
-                nn.BatchNorm1d(out_c),
-                nn.GELU()
-            )
+        self.out_conv = nn.Sequential(
+            Conv1d(middle_c, out_c, 5),
+            nn.BatchNorm1d(out_c),
+            nn.GELU()
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        for conv in self.conv_layers:
-            x = conv(x)
+        x = self.in_conv(x)
+        x = self.conv_layers(x)
+        x = self.out_conv(x)
         return x
 
 

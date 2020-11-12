@@ -2,6 +2,7 @@ import pathlib
 import warnings
 from argparse import ArgumentParser
 
+import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -36,8 +37,7 @@ if __name__ == '__main__':
         filepath=save_fn,
         save_last=True,
         monitor='val_loss',
-        save_top_k=5,
-        period=100
+        save_top_k=5
     )
 
     tb_logger = TensorBoardLogger(

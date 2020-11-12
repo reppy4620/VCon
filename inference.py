@@ -25,6 +25,8 @@ if __name__ == '__main__':
     model = model.load_from_checkpoint(args.ckpt_path)
     model.freeze()
 
+    print(model.hparams)
+
     print('Inference')
     wav = model(args.src_path, args.tgt_path)
 

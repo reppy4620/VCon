@@ -2,7 +2,7 @@
 exp_name: transformer
 seed: 42
 batch_size: 512
-n_epochs: 2000
+n_epochs: 4000
 
 train_ratio: 0.98
 from_fn: false
@@ -18,15 +18,15 @@ is_normalize: false
 
 # optimizer params
 optimizer:
-  lr: 0.0005
+  lr: 0.1
 
 # model params
 model:
   in_channel: 80
   channel: 256
-  emb_dim: 32
-  n_emb: 512
-  n_ce: 6
+  emb_dim: 64
+  n_emb: 256
+  n_ce: 7
   n_layers: 3
   n_head: 8
   dropout: 0.1

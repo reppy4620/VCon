@@ -47,10 +47,7 @@ class Decoder(nn.Module):
         self.n_layers = params.model.n_layers
 
         self.adjust_conv = nn.Sequential(
-            Conv1d(params.model.emb_dim, params.model.channel, 3),
-            nn.BatchNorm1d(params.model.channel),
-            nn.GELU(),
-            Conv1d(params.model.channel, params.model.channel, 3),
+            Conv1d(params.model.emb_dim, params.model.channel, 1),
             nn.BatchNorm1d(params.model.channel),
             nn.GELU(),
         )

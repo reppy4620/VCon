@@ -1,6 +1,6 @@
 from torch import Tensor
 from typing import Tuple
-from utils import AttributeDict, get_wav_mel, normalize, denormalize
+from utils import AttributeDict, get_wav_mel, normalize
 from .networks import (
     ContentEncoder, SpeakerEncoder, Decoder
 )
@@ -23,7 +23,7 @@ class TransformerModel(BaseModel):
 
     def inference(self, src_path: str, tgt_path: str):
         mel_src, mel_tgt = self._preprocess(src_path, tgt_path)
-        mel_out, _ = self.forward(mel_src, mel_tgt)
+        mel_out = self.forward(mel_src, mel_tgt)
         wav = self._mel_to_wav(mel_out)
         return wav
 

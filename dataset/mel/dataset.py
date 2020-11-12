@@ -14,7 +14,7 @@ class MelDataset(DatasetBase):
         i, src_wav = self.data[idx]
         src_mel = self._to_mel(src_wav)
         if self.indices is None:
-            return src_mel, src_mel
+            return src_mel, src_mel.clone()
 
         _, tgt_wav = self.data[random.choice(self.indices[i])]
         tgt_mel = self._to_mel(tgt_wav)

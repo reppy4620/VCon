@@ -1,4 +1,5 @@
 import torch
+import torch.optim as optim
 import pytorch_lightning as pl
 import torch.nn.functional as F
 
@@ -21,13 +22,12 @@ class TransformerModule(pl.LightningModule):
 
         self.model = TransformerModel(params)
 
-        self.spec_augmenter = SpecAugmentation(
-            time_drop_width=3,
-            time_stripes_num=2,
-            freq_drop_width=3,
-            freq_stripes_num=2
-        )
-        self.use_diff = False
+        # self.spec_augmenter = SpecAugmentation(
+        #     time_drop_width=3,
+        #     time_stripes_num=2,
+        #     freq_drop_width=3,
+        #     freq_stripes_num=2
+        # )
 
     def forward(self, spec_src, spec_tgt):
         return self.model.inference(spec_src, spec_tgt)
@@ -35,18 +35,14 @@ class TransformerModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         src, tgt = batch
 
-        if self.use_diff:
-            src_h = self.spec_augmenter(src)
-            tgt_h = self.spec_augmenter(tgt)
-        else:
-            src_h = self.spec_augmenter(src)
-            tgt_h = self.spec_augmenter(src)
+        # src_h = self.spec_augmenter(src)
+        # tgt_h = self.spec_augmenter(tgt)
 
-        out, q_loss = self.model(src_h, tgt_h)
-        # out, q_loss = self.model(src, tgt)
+        # out, q_loss = self.model(src_h, tgt_h)
+        out, q_loss = self.model(src, tgt)
 
         recon_loss = F.l1_loss(out, src)
-        loss = recon_loss + q_loss
+        loss = 100 * recon_loss + q_loss
 
         self.log_dict({
             'loss': loss,
@@ -62,7 +58,7 @@ class TransformerModule(pl.LightningModule):
         out, q_loss = self.model(src, tgt)
 
         recon_loss = F.l1_loss(out, src)
-        loss = recon_loss + q_loss
+        loss = 100 * recon_loss + q_loss
 
         self.log_dict({
             'val_loss': loss,
@@ -73,11 +69,8 @@ class TransformerModule(pl.LightningModule):
         return out[0]
 
     def validation_step_end(self, val_outputs):
-        if self.current_epoch == 1000:
-            self.use_diff = True
-            self.print('\n\n\nSwitch target mel-spectrum\n\n\n')
 
-        if self.global_step % 10 == 0:
+        if self.current_epoch % 10 == 0:
             if isinstance(val_outputs, torch.Tensor):
                 mel = val_outputs.unsqueeze(0)
             else:
@@ -87,14 +80,6 @@ class TransformerModule(pl.LightningModule):
             self.logger.experiment.add_image('mel', mel[0], global_step=self.global_step, dataformats='HW')
 
     def configure_optimizers(self):
-        # for transformer
-        return AdaBelief(
-            params=self.model.parameters(),
-            lr=self.hparams.optimizer.lr,
-            eps=1e-16,
-            weight_decay=1e-4,
-            weight_decouple=True,
-            rectify=True,
-            fixed_decay=False,
-            amsgrad=False
-        )
+        optimizer = optim.SGD(self.model.parameters(), lr=self.hparams.optimizer.lr, momentum=0.9, nesterov=True)
+        scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0)
+        return [optimizer], [scheduler]
