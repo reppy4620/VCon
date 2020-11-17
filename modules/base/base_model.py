@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils import denormalize
+from utils import normalize, denormalize, get_wav_mel
 
 
 class BaseModel(nn.Module):
@@ -64,3 +64,17 @@ class BaseModel(nn.Module):
                 pad_length = t_dim + freq - mod_val
                 mel = F.pad(mel[None, :, :], [0, pad_length], value=-5).squeeze(0)
         return mel
+
+    def _preprocess(self, src_path: str, tgt_path: str):
+        wav_src, mel_src = get_wav_mel(src_path)
+        wav_tgt, _ = get_wav_mel(tgt_path)
+        mel_src = self._preprocess_mel(mel_src)
+        return wav_src, wav_tgt, mel_src
+
+    def _preprocess_mel(self, mel):
+        if self.is_normalize:
+            mel = normalize(mel)
+        # mel = self._adjust_length(mel, self.freq)
+        mel = self.unsqueeze_for_input(mel)
+        return mel
+

@@ -5,6 +5,7 @@ from dataset import *
 _model_dict = {
     'againvc': AgainVCModel,
     'autovc': AutoVCModel,
+    'autovc_alpha': AutoVCAlphaModel,
     'fragmentvc': FragmentVCModel,
     'transformer': TransformerModel,
     'vqvc': VQVCModel,
@@ -13,6 +14,7 @@ _model_dict = {
 _module_dict = {
     'againvc': AgainVCModule,
     'autovc': AutoVCModule,
+    'autovc-alpha': AutoVCAlphaModule,
     'fragmentvc': FragmentVCModule,
     'transformer': TransformerModule,
     'vqvc': VQVCModule,
@@ -21,6 +23,7 @@ _module_dict = {
 _data_module_dict = {
     'againvc': MelDataModule,
     'autovc': WavMelDataModule,
+    'autovc-alpha': WavMelDataModule,
     'fragmentvc': Wav2VecMelDataModule,
     'transformer': MelDataModule,
     'vqvc': WavMelDataModule,

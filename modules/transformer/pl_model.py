@@ -1,13 +1,10 @@
-import torch
-import torch.optim as optim
 import pytorch_lightning as pl
+import torch
 import torch.nn.functional as F
-
 from adabelief_pytorch import AdaBelief
 
-from .model import TransformerModel
-from transforms import SpecAugmentation
 from utils import AttributeDict
+from .model import TransformerModel
 
 
 class TransformerModule(pl.LightningModule):
@@ -22,32 +19,22 @@ class TransformerModule(pl.LightningModule):
 
         self.model = TransformerModel(params)
 
-        # self.spec_augmenter = SpecAugmentation(
-        #     time_drop_width=3,
-        #     time_stripes_num=2,
-        #     freq_drop_width=3,
-        #     freq_stripes_num=2
-        # )
-
     def forward(self, spec_src, spec_tgt):
         return self.model.inference(spec_src, spec_tgt)
 
     def training_step(self, batch, batch_idx):
         src, tgt = batch
 
-        # src_h = self.spec_augmenter(src)
-        # tgt_h = self.spec_augmenter(tgt)
-
-        # out, q_loss = self.model(src_h, tgt_h)
-        out, q_loss = self.model(src, tgt)
+        out, q_loss, c_loss = self.model(src, tgt)
 
         recon_loss = F.l1_loss(out, src)
-        loss = 100 * recon_loss + q_loss
+        loss = recon_loss + q_loss + c_loss
 
         self.log_dict({
             'loss': loss,
             'r_loss': recon_loss,
-            'q_loss': q_loss
+            'q_loss': q_loss,
+            'c_loss': c_loss
         }, on_epoch=True)
 
         return loss
@@ -55,15 +42,16 @@ class TransformerModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         src, tgt = batch
 
-        out, q_loss = self.model(src, tgt)
+        out, q_loss, c_loss = self.model(src, tgt)
 
         recon_loss = F.l1_loss(out, src)
-        loss = 100 * recon_loss + q_loss
+        loss = recon_loss + q_loss + c_loss
 
         self.log_dict({
             'val_loss': loss,
             'val_r_loss': recon_loss,
             'val_q_loss': q_loss,
+            'val_c_loss': c_loss,
             'step': self.global_step
         }, prog_bar=True)
         return out[0]
@@ -80,6 +68,7 @@ class TransformerModule(pl.LightningModule):
             self.logger.experiment.add_image('mel', mel[0], global_step=self.global_step, dataformats='HW')
 
     def configure_optimizers(self):
-        optimizer = optim.SGD(self.model.parameters(), lr=self.hparams.optimizer.lr, momentum=0.9, nesterov=True)
-        scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2, eta_min=0)
-        return [optimizer], [scheduler]
+        return AdaBelief(
+            params=self.model.parameters(),
+            lr=self.hparams.optimizer.lr
+        )

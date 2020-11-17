@@ -1,20 +1,20 @@
 # experiment params
-exp_name: transformer
+exp_name: autovc-alpha
 seed: 42
-batch_size: 512
-n_epochs: 4000
+batch_size: 256
+n_epochs: 500
 
 train_ratio: 0.98
 from_fn: false
 
+# resemblyzer.VoiceEncoder encodes wav to 256-dim vector
+speaker_emb_dim: 256
 # mel-spectrogram bin size
 mel_size: 80
 # sampling rate
 sampling_rate: 22050
 # seq_len of spectrum during training
 seq_len: 128
-# whether normalize mel-spectrum
-is_normalize: false
 
 # optimizer params
 optimizer:
@@ -27,6 +27,6 @@ model:
   emb_dim: 64
   n_emb: 256
   n_ce: 6
-  n_layers: 3
+  n_layers: 5
   n_head: 8
   dropout: 0.1

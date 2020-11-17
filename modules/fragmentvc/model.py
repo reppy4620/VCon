@@ -107,16 +107,3 @@ class FragmentVCModel(BaseModel):
         # model.remove_pretraining_modules()
         # model.eval()
         # self.wav2vec = model
-
-    def _preprocess(self, src_path: str, tgt_path: str):
-        feat, _ = get_wav2vec_features(src_path, self.wav2vec)
-        _, mel_tgt = get_wav_mel(tgt_path)
-        feat = self.unsqueeze_for_input(feat)
-        mel_tgt = self._preprocess_mel(mel_tgt)
-        return feat, mel_tgt
-
-    def _preprocess_mel(self, mel):
-        if self.is_normalize:
-            mel = normalize(mel)
-        mel = self.unsqueeze_for_input(mel)
-        return mel

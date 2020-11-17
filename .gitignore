@@ -158,4 +158,5 @@ ipython_config.py
 ./notebooks/.ipynb_checkpoints
 test
 outputs
+pretrained
 lightning_logs
