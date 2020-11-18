@@ -4,10 +4,10 @@ import torch.nn.functional as F
 from adabelief_pytorch import AdaBelief
 
 from utils import AttributeDict
-from .model import TransformerModel
+from .model import TransformerAlphaModel
 
 
-class TransformerModule(pl.LightningModule):
+class TransformerAlphaModule(pl.LightningModule):
 
     def __init__(self, params):
         super().__init__()
@@ -17,7 +17,7 @@ class TransformerModule(pl.LightningModule):
 
         self.hparams = params
 
-        self.model = TransformerModel(params)
+        self.model = TransformerAlphaModel(params)
 
     def forward(self, spec_src, spec_tgt):
         return self.model.inference(spec_src, spec_tgt)
@@ -25,15 +25,16 @@ class TransformerModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         src, tgt = batch
 
-        out, q_loss = self.model(src, tgt)
+        out, q_loss, c_loss = self.model(src, tgt)
 
         recon_loss = F.l1_loss(out, src)
-        loss = recon_loss + 0.1 * q_loss
+        loss = recon_loss + 0.1 * q_loss + 0.1 * c_loss
 
         self.log_dict({
             'loss': loss,
             'r_loss': recon_loss,
-            'q_loss': q_loss
+            'q_loss': q_loss,
+            'c_loss': c_loss
         }, on_epoch=True)
 
         return loss
@@ -41,15 +42,16 @@ class TransformerModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         src, tgt = batch
 
-        out, q_loss = self.model(src, tgt)
+        out, q_loss, c_loss = self.model(src, tgt)
 
         recon_loss = F.l1_loss(out, src)
-        loss = recon_loss + 0.1 * q_loss
+        loss = recon_loss + 0.1 * q_loss + 0.1 * c_loss
 
         self.log_dict({
             'val_loss': loss,
             'val_r_loss': recon_loss,
             'val_q_loss': q_loss,
+            'val_c_loss': c_loss,
             'step': self.global_step
         }, prog_bar=True)
         return out[0]

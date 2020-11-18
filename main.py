@@ -2,7 +2,6 @@ import pathlib
 import warnings
 from argparse import ArgumentParser
 
-import torch
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
