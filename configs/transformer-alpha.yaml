@@ -1,7 +1,7 @@
 # experiment params
-exp_name: transformer
+exp_name: transformer-alpha
 seed: 42
-batch_size: 512
+batch_size: 256
 n_epochs: 4000
 
 train_ratio: 0.98

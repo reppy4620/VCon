@@ -25,16 +25,15 @@ class TransformerAlphaModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         src, tgt = batch
 
-        out, q_loss, c_loss = self.model(src, tgt)
+        out, q_loss = self.model(src, tgt)
 
         recon_loss = F.l1_loss(out, src)
-        loss = recon_loss + 0.1 * q_loss + 0.1 * c_loss
+        loss = recon_loss + 0.1 * q_loss
 
         self.log_dict({
             'loss': loss,
             'r_loss': recon_loss,
-            'q_loss': q_loss,
-            'c_loss': c_loss
+            'q_loss': q_loss
         }, on_epoch=True)
 
         return loss
@@ -42,16 +41,15 @@ class TransformerAlphaModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         src, tgt = batch
 
-        out, q_loss, c_loss = self.model(src, tgt)
+        out, q_loss = self.model(src, tgt)
 
         recon_loss = F.l1_loss(out, src)
-        loss = recon_loss + 0.1 * q_loss + 0.1 * c_loss
+        loss = recon_loss + 0.1 * q_loss
 
         self.log_dict({
             'val_loss': loss,
             'val_r_loss': recon_loss,
             'val_q_loss': q_loss,
-            'val_c_loss': c_loss,
             'step': self.global_step
         }, prog_bar=True)
         return out[0]

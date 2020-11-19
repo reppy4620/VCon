@@ -71,7 +71,6 @@ class Decoder(nn.Module):
         for i in range(self.n_layers):
             src = self.self_attns[i](src)
             src = self.st_attns[i](src, c_tgt[i])
-        src = self.smoothers(src)
         src = self.linear(src.permute(1, 0, 2)).transpose(1, 2)
         src = src + self.post_net(src)
         return src

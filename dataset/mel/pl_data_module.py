@@ -15,7 +15,7 @@ class MelDataModule(DataModuleBase):
             self.train_x, self.valid_x = MelFromFileDataset(train, train_i), MelFromFileDataset(valid)
         else:
             train, valid, train_i, _ = load_data_with_indices(Path(self.params.data_dir), ratio=self.params.train_ratio)
-            self.train_x, self.valid_x = MelDataset(train), MelDataset(valid)
+            self.train_x, self.valid_x = MelDataset(train, train_i), MelDataset(valid)
 
     def _collate_fn(self, batch):
         src, tgt = tuple(zip(*batch))

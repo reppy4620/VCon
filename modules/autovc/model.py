@@ -63,3 +63,16 @@ class AutoVCModel(BaseModel):
         c = torch.tensor(c, dtype=torch.float, device=device)
         c = c[:, :, None].expand(-1, -1, time_size)
         return c
+
+    def _preprocess(self, src_path: str, tgt_path: str):
+        wav_src, mel_src = get_wav_mel(src_path)
+        wav_tgt, _ = get_wav_mel(tgt_path)
+        mel_src = self._preprocess_mel(mel_src)
+        return wav_src, wav_tgt, mel_src
+
+    def _preprocess_mel(self, mel):
+        if self.is_normalize:
+            mel = normalize(mel)
+        mel = self._adjust_length(mel, self.freq)
+        mel = self.unsqueeze_for_input(mel)
+        return mel

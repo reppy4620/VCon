@@ -6,9 +6,9 @@ from torch import Tensor
 from utils import AttributeDict
 
 
-def Conv1d(c_in: int, c_out: int, k: int, s: int = 1, d: int = 1):
+def Conv1d(c_in: int, c_out: int, k: int, s: int = 1, d: int = 1, padding_mode: str = 'zeros'):
     p = (k - 1) // 2
-    conv = nn.Conv1d(c_in, c_out, k, s, p, dilation=d)
+    conv = nn.Conv1d(c_in, c_out, k, s, p, dilation=d, padding_mode=padding_mode)
     nn.init.kaiming_normal_(conv.weight)
     return conv
 
@@ -35,16 +35,25 @@ class ResidualConv(nn.Module):
 
 
 class ConvExtractor(nn.Module):
-    def __init__(self, in_c, middle_c, out_c, n_layer):
+    def __init__(self, in_c, middle_c, out_c, n_layer, residual=True):
         super().__init__()
 
         self.in_conv = nn.Sequential(
-            Conv1d(in_c, middle_c, 9),
+            Conv1d(in_c, middle_c, 9, padding_mode='replicate'),
             nn.BatchNorm1d(middle_c),
             nn.GELU()
         )
 
-        self.conv_layers = nn.Sequential(*[ResidualConv(middle_c) for _ in range(n_layer-2)])
+        if residual:
+            self.conv_layers = nn.Sequential(*[ResidualConv(middle_c) for _ in range(n_layer-2)])
+        else:
+            self.conv_layers = nn.Sequential(*[
+                nn.Sequential(
+                    Conv1d(middle_c, middle_c, 5),
+                    nn.BatchNorm1d(middle_c),
+                    nn.GELU()
+                ) for _ in range(n_layer - 2)
+            ])
 
         self.out_conv = nn.Sequential(
             Conv1d(middle_c, out_c, 5),

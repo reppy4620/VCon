@@ -60,8 +60,8 @@ class Decoder(nn.Module):
             SourceTargetAttention(params, is_ffn=True) for _ in range(params.model.n_layers)
         ])
 
-        self.smoothers = nn.Sequential(*[
-            SelfAttention(params, is_ffn=True) for _ in range(params.model.n_layers)
+        self.adjust_attn = nn.Sequential(*[
+            SelfAttention(params, is_ffn=True) for _ in range(params.model.n_adjust_attn)
         ])
         self.linear = nn.Linear(params.model.channel, params.mel_size)
 
@@ -74,7 +74,7 @@ class Decoder(nn.Module):
         for i in range(self.n_layers):
             src = self.self_attns[i](src)
             src = self.st_attns[i](src, c_tgt[i])
-        src = self.smoothers(src)
+        src = self.adjust_attn(src)
         src = self.linear(src.permute(1, 0, 2)).transpose(1, 2)
         src = src + self.post_net(src)
         return src
