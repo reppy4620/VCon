@@ -8,7 +8,13 @@ class ContentEncoder(nn.Module):
     def __init__(self, params):
         super().__init__()
 
-        self.conv = ConvExtractor(params.mel_size, params.model.channel, params.model.emb_dim, params.model.n_ce)
+        self.conv = ConvExtractor(
+            params.mel_size,
+            params.model.channel,
+            params.model.emb_dim,
+            params.model.n_ce,
+            params.model.residual
+        )
         self.quantize = Quantize(params.model.emb_dim, params.model.n_emb)
 
     def forward(self, x):
@@ -60,8 +66,8 @@ class Decoder(nn.Module):
             SourceTargetAttention(params, is_ffn=True) for _ in range(params.model.n_layers)
         ])
 
-        self.adjust_attn = nn.Sequential(*[
-            SelfAttention(params, is_ffn=True) for _ in range(params.model.n_adjust_attn)
+        self.smooth_attn = nn.Sequential(*[
+            SelfAttention(params, is_ffn=True) for _ in range(params.model.n_smooth)
         ])
         self.linear = nn.Linear(params.model.channel, params.mel_size)
 
@@ -74,7 +80,7 @@ class Decoder(nn.Module):
         for i in range(self.n_layers):
             src = self.self_attns[i](src)
             src = self.st_attns[i](src, c_tgt[i])
-        src = self.adjust_attn(src)
+        src = self.smooth_attn(src)
         src = self.linear(src.permute(1, 0, 2)).transpose(1, 2)
         src = src + self.post_net(src)
         return src

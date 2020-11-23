@@ -50,6 +50,6 @@ if __name__ == '__main__':
         logger=tb_logger,
         max_epochs=config.n_epochs,
         gradient_clip_val=5.0,
-        deterministic=True
+        deterministic=True,
     )
     trainer.fit(model=model, datamodule=vcon_dm)

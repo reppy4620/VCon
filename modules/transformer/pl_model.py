@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 import torch
+import torch.optim as optim
 import torch.nn.functional as F
 from adabelief_pytorch import AdaBelief
 
@@ -66,6 +67,20 @@ class TransformerModule(pl.LightningModule):
             self.logger.experiment.add_image('mel', mel[0], global_step=self.global_step, dataformats='HW')
 
     def configure_optimizers(self):
+        # optimizer = optim.SGD(self.model.parameters(), lr=self.hparams.optimizer.lr, momentum=0.9, nesterov=True)
+        # scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 10, 2, eta_min=1e-6)
+        # optimizer = AdaBelief(
+        #     params=self.model.parameters(),
+        #     lr=self.hparams.optimizer.lr,
+        #     betas=(0.9, 0.999),
+        #     eps=1e-16,
+        #     weight_decouple=True,
+        #     rectify=True,
+        #     fixed_decay=False,
+        #     amsgrad=False
+        # )
+        # scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 10, 2, eta_min=1e-6)
+        # return [optimizer], [scheduler]
         return AdaBelief(
             params=self.model.parameters(),
             lr=self.hparams.optimizer.lr,

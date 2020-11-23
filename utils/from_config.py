@@ -8,7 +8,6 @@ _model_dict = {
     'autovc-alpha': AutoVCAlphaModel,
     'fragmentvc': FragmentVCModel,
     'transformer': TransformerModel,
-    'transformer-alpha': TransformerAlphaModel,
     'vqvc': VQVCModel,
 }
 
@@ -18,7 +17,6 @@ _module_dict = {
     'autovc-alpha': AutoVCAlphaModule,
     'fragmentvc': FragmentVCModule,
     'transformer': TransformerModule,
-    'transformer-alpha': TransformerAlphaModule,
     'vqvc': VQVCModule,
 }
 
@@ -28,7 +26,6 @@ _data_module_dict = {
     'autovc-alpha': WavMelDataModule,
     'fragmentvc': Wav2VecMelDataModule,
     'transformer': MelDataModule,
-    'transformer-alpha': MelDataModule,
     'vqvc': WavMelDataModule,
 }
 

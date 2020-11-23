@@ -35,7 +35,7 @@ class ResidualConv(nn.Module):
 
 
 class ConvExtractor(nn.Module):
-    def __init__(self, in_c, middle_c, out_c, n_layer, residual=True):
+    def __init__(self, in_c, middle_c, out_c, n_layer, residual=False):
         super().__init__()
 
         self.in_conv = nn.Sequential(
