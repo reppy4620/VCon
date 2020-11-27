@@ -13,8 +13,5 @@ from .fragmentvc import FragmentVCModule
 from .transformer import TransformerModel
 from .transformer import TransformerModule
 
-from .transformer_alpha import TransformerAlphaModel
-from .transformer_alpha import TransformerAlphaModule
-
 from .vqvc import VQVCModel
 from .vqvc import VQVCModule

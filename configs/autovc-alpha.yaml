@@ -1,8 +1,8 @@
 # experiment params
 exp_name: autovc-alpha
 seed: 42
-batch_size: 256
-n_epochs: 500
+batch_size: 128
+n_epochs: 1000
 
 train_ratio: 0.98
 from_fn: false
@@ -14,19 +14,21 @@ mel_size: 80
 # sampling rate
 sampling_rate: 22050
 # seq_len of spectrum during training
-seq_len: 128
+seq_len: 256
 
 # optimizer params
 optimizer:
-  lr: 0.001
+  lr: 0.0003
 
 # model params
 model:
   in_channel: 80
   channel: 256
   emb_dim: 64
-  n_emb: 256
-  n_ce: 6
-  n_layers: 5
+  n_emb: 512
+  n_ce: 9
+  n_layers: 3
+  n_smooth: 5
   n_head: 8
   dropout: 0.1
+  residual: true
